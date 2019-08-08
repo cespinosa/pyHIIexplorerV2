@@ -23,7 +23,7 @@ def get_slice_from_flux_elines(obj_name, fe_file, n_param=45, header=True,
     else:
         logger.debug('Getting only data from fits file')
         data = read_flux_elines_cubes(obj_name, fe_file,
-                                            header=header, log_level=log_level)
+                                      header=header, log_level=log_level)
     
     if data is not None:
         logger.debug('Getting cube slice {}'.format(n_param))
@@ -86,7 +86,7 @@ def get_center(obj_name, log_level='info'):
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-    logger.debug("File path".format(dir_path + file_name))
+    logger.debug("File path {}".format(dir_path + file_name))
     try:
         with open(dir_path + file_name, 'r') as fileCAL:
             reader = csv.reader(fileCAL)
@@ -100,7 +100,7 @@ def get_center(obj_name, log_level='info'):
                            'get_proc_elines_CALIFA.csv file')
             logger.warning('Setting XC=YC=0')
         else:
-            logger.debug('{} found in get_proc_elines')
+            logger.debug('{} found in get_proc_elines'.format(obj_name))
     except FileNotFoundError:
         logger.error('get_proc_elines_CALIFA.csv not found')
     except:
