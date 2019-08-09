@@ -326,6 +326,17 @@ if __name__ == "__main__":
                         " or 'debug'" )
     args = parser.parse_args()
     Ha_map_path = args.HA_MAP
+    nx = args.NX
+    ny = args.NY
     max_dist = args.MAX_DIST
-    pyHIIexplorer(Ha_map_path, max_dist).HIIrecover()
-    print('Fin')
+    frac_peak = args.FRAC_PEAK
+    dist = args.DIST
+    min_flux = args.MIN_FLUX
+    obj_name = args.OBJ_NAME
+    output_path = args.output_path
+    XC = args.XC
+    YC = args.YC
+    log_level = args.LOG_LEVEL
+    pyHIIexplorer(Ha_map, nx, ny, max_dist, frac_peak, F_max, dist, min_flux,
+                  obj_name, output_path, XC, YC,
+                  log_level=log_level).HIIrecover()
