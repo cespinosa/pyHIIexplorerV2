@@ -306,7 +306,24 @@ if __name__ == "__main__":
     description = 'Identifies clumpy structures on a line emission map'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('HA_MAP', help='Ha emission map PATH')
-    parser.add_argument('MAX_DIST', type=float, help='max distance tbw')
+    parser.add_argument('NX', help='x dimension of data map')
+    parser.add_argument('NY', help='y dimension of data map')
+    parser.add_argument('MAX_DIST', type=float, help='max distance to the' +
+                        ' peak emission')
+    parser.add_argument('FRAC_PEAK', help='Relative threshold with' +
+                        ' respect to this peak emission')
+    parser.add_argument('F_MAX', help='flux intensity threshold for' +
+                        ' the peak emission')
+    parser.add_argument('DIST', help='Min distance of a peak emission to' +
+                        'to the center of galaxy' )
+    parser.add_argument('MIN_FLUX', help='absolute threshold of the minimum' +
+                        ' intensity of ionized regions')
+    parser.add_argument('OBJ_NAME', help='object name for the output file')
+    parser.add_argument('OUTPUT_PATH', help='output directory path')
+    parser.add_argument('XC', help='x coordinate of galactic center')
+    parser.add_argument('YC', help='y coordinate of galactic center')
+    parser.add_argument('LOG_LEVEL', help="Level of verbose: 'info'"+
+                        " or 'debug'" )
     args = parser.parse_args()
     Ha_map_path = args.HA_MAP
     max_dist = args.MAX_DIST
