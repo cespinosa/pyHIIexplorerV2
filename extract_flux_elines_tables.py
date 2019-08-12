@@ -107,10 +107,10 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
             a_out_sq[:, i] = mean_array_sq/npt*(1+1.6*np.log(npt))
         logger.debug('Output path: ' + output)
         output_name = "HII." + obj_name + ".flux_elines.csv"
-        with open(file_path + ext_name, "wt") as fp:
+        with open(output + output_name, "wt") as fp:
             if verbose:
-                print("Writing csv file in:{}".format(file_path
-                                                      + ext_name))
+                print("Writing csv file in:{}".format(output
+                                                      + output_name))
             today = date.today()
             day = today.day
             month = today.month
