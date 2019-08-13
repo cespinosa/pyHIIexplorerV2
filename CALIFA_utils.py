@@ -103,33 +103,33 @@ def get_center(obj_name, log_level='info'):
             logger.debug('{} found in get_proc_elines'.format(obj_name))
     except FileNotFoundError:
         logger.error('get_proc_elines_CALIFA.csv not found')
-    except:x
+    except:
         logger.warning('Something wrong  with get center function')
     return XC, YC
 
-    def read_seg_map(seg_map, header=False, log_level='info'):
-        logger = logging.getLogger('read seg map')
-        ch = logging.StreamHandler()
-        if log_level == 'info':
-            logger.setLevel(level=logging.INFO)
-            ch.setLevel(logging.INFO)
-        if log_level == 'debug':
-            logger.setLevel(level=logging.DEBUG)
-            ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-        ch.setFormatter(formatter)
-        logger.addHandler(ch)
-        file_path = seg_map
-        if os.path.isfile(file_path):
-            if header:
-                data, header = fits.getdata(file_path, header=header)
-            else:
-                data = fits.getdata(file_path, header=header)
-        else:
-            logger.warn('No exist segmentation map file')
-            return [0]
-       logger.info('Read Segmentation map file done')
+def read_seg_map(seg_map, header=False, log_level='info'):
+    logger = logging.getLogger('read seg map')
+    ch = logging.StreamHandler()
+    if log_level == 'info':
+        logger.setLevel(level=logging.INFO)
+        ch.setLevel(logging.INFO)
+    if log_level == 'debug':
+        logger.setLevel(level=logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    file_path = seg_map
+    if os.path.isfile(file_path):
         if header:
-            return header, data
+            data, header = fits.getdata(file_path, header=header)
         else:
-            return data
+            data = fits.getdata(file_path, header=header)
+    else:
+        logger.warn('No exist segmentation map file')
+        return [0]
+    logger.info('Read Segmentation map file done')
+    if header:
+        return header, data
+    else:
+        return data
