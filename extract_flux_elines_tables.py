@@ -144,5 +144,8 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
             fp.write("#  COLUMN9:  Ha_DISP            ,"
                      + "  float, km/s  ,"
                      + " Ha velocity dispersion-sigma in km/s\n")
+            NC = 10
+            writer = csv.writer(fp)
+            
             
 if __name__ == "__main__":
