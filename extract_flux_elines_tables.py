@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import logging
+import argparse
+import csv
 import numpy as np
 import scipy.constants as scts
 from datetime import date
 from CALIFA_utils import read_flux_elines_cubes, read_seg_map
 
-def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
+def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
     logger = logging.getLogger('extract_flux_elines_table')
     ch = logging.StreamHandler()
     if log_level == 'info':
@@ -18,7 +20,7 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
     ch.setFormatter(formatter)
     logger.addHandler(ch)    
     spol = scts.speed_of_light/1000
-    head, data = read_flux_elines_cubes(obj_name, fe_file,
+    header, data = read_flux_elines_cubes(obj_name, fe_file,
                                         header=True, log_level=log_level)
     (nz_dt, ny_dt, nx_dt) = data.shape
     crval1 = header['CRVAL1']
@@ -39,14 +41,13 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
     for label in label_list:
         try:
             grat = header[label]
-            if verbose:
-                logger.debug("Using GRAT_ID label:{}".format(label))
+            logger.debug("Using GRAT_ID label:{}".format(label))
             break
         except Exception:
             grat = None
     if grat is None:
-        logger.warn("GRAT ID label is not in the label list")
-        logger.warn("Table for {} is not created".format(obj_name))
+        logger.warning("GRAT ID label is not in the label list")
+        logger.warning("Table for {} is not created".format(obj_name))
         return None
     fwhm_inst = 2.3
     if grat == 9:
@@ -108,9 +109,8 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
         logger.debug('Output path: ' + output)
         output_name = "HII." + obj_name + ".flux_elines.csv"
         with open(output + output_name, "wt") as fp:
-            if verbose:
-                print("Writing csv file in:{}".format(output
-                                                      + output_name))
+            logger.debug("Writing csv file in:{}".format(output
+                                                         + output_name))
             today = date.today()
             day = today.day
             month = today.month
@@ -144,5 +144,111 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output):
             fp.write("#  COLUMN9:  Ha_DISP            ,"
                      + "  float, km/s  ,"
                      + " Ha velocity dispersion-sigma in km/s\n")
-            
+            NC = 10
+            writer = csv.writer(fp)
+            for i, wl in enumerate(wavelengths):
+                for I in [i, i+4*NZ, i+3*NZ, i+7*NZ,
+                          i+NZ, i+5*NZ, i+2*NZ, i+6*NZ]:
+                    header_now = header['NAME{}'.format(I)]
+                    for s_char in ' []':
+                        header_now = header_now.replace(s_char, '')
+                    junk = header_now.split('I')
+                    if len(junk) > 1:
+                        temp = header_now.split('I')[-1]
+                        header_now = header_now.replace(temp, '')
+                    else:
+                        header_now = header_now
+                    if "vel" in header_now:
+                        units = "km/s"
+                    if "disp" in header_now:
+                        # header_now = "sigma corr"+header_now
+                        units = "km/s"
+                    if "flux" in header_now:
+                        units = "10^-16 erg/s/cm^2"
+                    if "EW" in header_now:
+                        units = "Angstrom"
+                    header_now = header_now+str(int(wl))
+                    fp.write("#  COLUMN{}: ".format(NC)
+                             + "{}      ".format(header_now)
+                             + "float,  {}  ,".format(units)
+                             + "{} for".format(header['NAME{}'.format(I)])
+                             + "{}\n".format(wl))
+                    NC += 1
+            for i in np.arange(0, ns):
+                Row_lines = []
+                K = i + 1
+                DEC = crval2+cdelta2*(y[i]-(crpix2-1))/3600
+                cos_ang = np.cos(np.pi*DEC/180)
+                RA = crval1-cdelta1*(x[i]-(crpix1-1))/3600/cos_ang
+                HIIREGID = str(name)+'-'+str(K)
+                a_out_weights = np.copy(a_out[:NZ, i])
+                a_out_vel = np.copy(a_out_med[NZ:2*NZ, i])
+                a_out_disp = np.copy(a_out_med[2*NZ:3*NZ, i])
+                indexs = [0, 26, 28, 45]
+                a_out_weights = a_out_weights[indexs]
+                a_out_vel = a_out_vel[indexs]
+                a_out_disp = a_out_disp[indexs]
+                a_lambda = wavelengths[indexs]                
+                vel_Ha = a_out_med[96, i]
+                disp_Ha = a_out_med[147, i]
+                disp_Ha = np.sqrt(abs(disp_Ha**2 - fwhm_inst**2))
+                disp_Ha = (disp_Ha/6563)*scts.speed_of_light/1000
+                a_out_disp = np.sqrt(abs(a_out_disp**2-fwhm_inst**2))
+                a_out_disp = (a_out_disp/a_lambda)*scts.speed_of_light/1000
+                a_out_disp[a_out_disp <= 10] = np.nan
+                vel = vel_Ha
+                disp = disp_Ha
+                if np.nanmin(a_out_disp) < disp:
+                    disp = np.nanmin(a_out_disp)
+                disp = disp/2.354
+                Row_lines.append(HIIREGID)
+                Row_lines.append(name)
+                Row_lines.append(califaID)
+                Row_lines.append(x[i])
+                Row_lines.append(y[i])
+                Row_lines.append(RA)
+                Row_lines.append(DEC)
+                Row_lines.append(vel)
+                Row_lines.append(disp)
+                for j in np.arange(NZ):
+                    for J in [j, j+4*NZ, j+3*NZ, j+7*NZ,
+                              i+NZ, i+5*NZ, i+2*NZ, i+6*NZ]:
+                        val = a_out[J, i]
+                        val_sq = a_out_sq[J, i]
+                        val_med = a_out_med[J, i]
+                        header_now = header['NAME{}'.format(J)]
+                        for char in ' []':
+                            header_now = header_now.replace(char, '')
+                        if "disp" in header_now:
+                            val = val_med
+                            val_now = np.sqrt(np.abs(val**2-fwhm_inst**2))
+                            val = (val_now/wavelengths[j]) * spol
+                        if "vel" in header_now:
+                            val = val_med
+                        if "EW" in header_now:
+                            val = val_med
+                        if "e_" in header_now:
+                            val = np.sqrt(np.abs(val_sq))
+                        Row_lines.append(val)
+                writer.writerow(Row_lines)
+            logger.debug(output_name + " created")
+    else:
+        logger.info("No regions detected for " + obj_name)
+    logger.info("extract flux elines table finish for {}".format(obj_name))
+
 if __name__ == "__main__":
+    description = "Extract the mean flux emission lines values for every ionized regions from segmentation map and fe file of CALIFA survey"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('OBJ_NAME', help='object name for the output file')
+    parser.add_argument('SEG_MAP', help='Segmentation path file')
+    parser.add_argument('FE_FILE', help='flux elines path file')
+    parser.add_argument('OUTPUT', help='outpat path directory')
+    parser.add_argument('LOG_LEVEL', help="Level of verbose: 'info'"+
+                        " or 'debug'", default='info')
+    args = parser.parse_args()
+    obj_name = args.OBJ_NAME
+    seg_map = args.SEG_MAP
+    fe_file = args.FE_FILE
+    output = args.OUTPUT
+    log_level = args.LOG_LEVEL
+    extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level)
