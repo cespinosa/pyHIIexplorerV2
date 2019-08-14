@@ -133,3 +133,41 @@ def read_seg_map(seg_map, header=False, log_level='info'):
         return header, data
     else:
         return data
+
+def read_SSP_fit(obj_name, ssp_file, header=True, log_level='info'):
+    logger = logging.getLogger('read ssp file')
+    ch = logging.StreamHandler()
+    if log_level == 'info':
+        logger.setLevel(level=logging.INFO)
+        ch.setLevel(logging.INFO)
+    if log_level == 'debug':
+        logger.setLevel(level=logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.info("{} SSP file ".format(obj_name)
+                  + "path: {}".format(fe_file))
+    if os.path.isfile(file_path):
+        try:
+            if header:
+                data, head = fits.getdata(file_path, header=header)
+                logger.debug('Read SSP done')
+                return head, data
+            else:
+                data = fits.getdata(file_path, header=header)
+                logger.debug('Read SSP done')
+                return data
+        except Exception:
+            logger.warning('Something wrong with SSP FITS file for' +
+                           '{}'.format(obj_name))
+            if header:
+                return None, None
+            else:
+                return None
+    else:
+        logger.error('SSP Fits file not found for {}'.format(obj_name))
+        if header:
+            return None, None
+        else:
+            return None
