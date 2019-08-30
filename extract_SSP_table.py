@@ -1,11 +1,11 @@
 import numpy as np
 import logging
 import argparse
+import csv
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SSP_fits, get_slice_from_flux_elines
 
-def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, Ha_map,
-                      log_level):
+def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, log_level):
     logger = logging.getLogger('extract_SSP_table')
     ch = logging.StreamHandler()
     if log_level == 'info':
@@ -17,10 +17,11 @@ def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, Ha_map,
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-
+    
+    head, data = read_SSP_fits(obj_name, ssp_file, log_level)
     hd_fe, dt_fe = get_slice_from_flux_elines(obj_name, fe_file, 45,
                                               header=True, log_level=log_level)
-    data_seg_map = read_seg_map(seg_map, log_level='info')
+    seg_map = read_seg_map(seg_map, log_level='info')
     ns = int(np.max(seg_map))
     (nz_dt, ny_dt, nx_dt) = data.shape
     crval1 = hd_fe['CRVAL1']
