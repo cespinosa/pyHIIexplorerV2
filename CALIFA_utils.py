@@ -147,7 +147,8 @@ def read_SSP_fit(obj_name, ssp_file, header=True, log_level='info'):
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.info("{} SSP file ".format(obj_name)
-                  + "path: {}".format(fe_file))
+                  + "path: {}".format(ssp_file))
+    file_path = ssp_file
     if os.path.isfile(file_path):
         try:
             if header:
@@ -167,6 +168,41 @@ def read_SSP_fit(obj_name, ssp_file, header=True, log_level='info'):
                 return None
     else:
         logger.error('SSP Fits file not found for {}'.format(obj_name))
+        if header:
+            return None, None
+        else:
+            return None
+
+def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
+    logger = logging.getLogger('read sfh file')
+    ch = logging.StreamHandler()
+    if log_level == 'info':
+        logger.setLevel(level=logging.INFO)
+        ch.setLevel(logging.INFO)
+    if log_level == 'debug':
+        logger.setLevel(level=logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.info("{} SSP file ".format(obj_name)
+                  + "path: {}".format(sfh_file))
+    file_path = sfh_file
+    if os.path.isfile(file_path):
+        try:
+            if header:
+                data, head = fits.getdata(file_path, header=header)
+            else:
+                data = fits.getdata(file_path, header=header)
+        except Exception:
+            logger.warning('Something wrong with SFH FITS file for' +
+                           '{}'.format(obj_name))
+            if header:
+                return None, None
+            else:
+                return None
+    else:
+        logger.error('SFH Fits file not found for {}'.format(obj_name))
         if header:
             return None, None
         else:
