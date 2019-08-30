@@ -1,9 +1,10 @@
 import logging
 import numpy as np
+import pandas as pd
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SFH_fits
 
-def extract_SFH_table(obj_name, seg_map, sfh_files, output, Ha_map, log_level):
+def extract_SFH_table(obj_name, seg_map, sfh_file, output, log_level):
     logger = logging.getLogger('extract_SFH_table')
     ch = logging.StreamHandler()
     if log_level == 'info':
@@ -18,10 +19,10 @@ def extract_SFH_table(obj_name, seg_map, sfh_files, output, Ha_map, log_level):
     
     logging.debug('Starting extract SFH table for galaxy ' + obj_name)
     
-    head, data = read_SFH_fits(path=path, log_level=log_level)
+    head, data = read_SFH_fits(obj_name, sfh_file, log_level=log_level)
     seg_map = read_seg_map(seg_map, log_level=log_level)
-    is head is None or data is None:
-        logging.warning('Error with SFH file for {}'.format(obj_name)
+    if head is None or data is None:
+        logging.warning('Error with SFH file for {}'.format(obj_name))
         return None
     ns = int(np.max(seg_map))
     if ns > 0:
@@ -34,7 +35,7 @@ def extract_SFH_table(obj_name, seg_map, sfh_files, output, Ha_map, log_level):
             means_array_per_region = np.array([])
             #  print('current region',n)
             mask_region = seg == n
-            label = self.obj_name + '-{}'.format(int(n))
+            label = obj_name + '-{}'.format(int(n))
             label_rows.append(label)
             for slide in np.arange(nz):
                 #  print('\t current slide',slide)
