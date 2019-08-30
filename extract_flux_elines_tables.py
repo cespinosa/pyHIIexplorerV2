@@ -117,7 +117,7 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
             year = today.year
             fp.write("# AUTHOR: C. Espinosa\n")
             fp.write("# SOURCE: QCVC\n")
-            fp.write("# DATE: {}-{}-{}".format(day, month, year))
+            fp.write("# DATE: {}-{}-{}\n".format(year, month, day))
             fp.write("# VERSION: 1.0\n")
             fp.write("# COLAPRV: S.F.Sanchez\n")
             fp.write("# PUBAPRV: None\n")
@@ -170,7 +170,7 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
                     header_now = header_now+str(int(wl))
                     fp.write("#  COLUMN{}: ".format(NC)
                              + "{}      ".format(header_now)
-                             + "float,  {}  ,".format(units)
+                             + ",float,  {}  ,".format(units)
                              + "{} for".format(header['NAME{}'.format(I)])
                              + "{}\n".format(wl))
                     NC += 1
