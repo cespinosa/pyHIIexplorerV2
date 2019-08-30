@@ -4,7 +4,8 @@ import argparse
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SSP_fits, get_slice_from_flux_elines
 
-def extract_SSP_table(obj_name, seg_map, ssp_file, output, Ha_map, log_level):
+def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, Ha_map,
+                      log_level):
     logger = logging.getLogger('extract_SSP_table')
     ch = logging.StreamHandler()
     if log_level == 'info':
@@ -17,8 +18,8 @@ def extract_SSP_table(obj_name, seg_map, ssp_file, output, Ha_map, log_level):
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    hd_fe, dt_fe = self.get_slice_from_flux_elines(45, header=True,
-                                                   verbose=verbose)
+    hd_fe, dt_fe = get_slice_from_flux_elines(obj_name, fe_file, 45,
+                                              header=True, log_level=log_level)
     data_seg_map = read_seg_map(seg_map, log_level='info')
     ns = int(np.max(seg_map))
     (nz_dt, ny_dt, nx_dt) = data.shape
@@ -69,7 +70,7 @@ def extract_SSP_table(obj_name, seg_map, ssp_file, output, Ha_map, log_level):
             a_out[:, i] = mean_array * npt
             a_out_med[:, i] = mean_array
             a_out_sq[:, i] = mean_array_sq/npt
-        logger.debut('Output path: ' + output)
+        logger.debug('Output path: ' + output)
         output_name = "HII." + obj_name + ".SSP.csv"
         with open(output + output_name, "wt") as fp:
             logger.debug("Writing csv file in:{}".format(output
