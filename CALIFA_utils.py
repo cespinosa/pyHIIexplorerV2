@@ -134,7 +134,7 @@ def read_seg_map(seg_map, header=False, log_level='info'):
     else:
         return data
 
-def read_SSP_fit(obj_name, ssp_file, header=True, log_level='info'):
+def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
     logger = logging.getLogger('read ssp file')
     ch = logging.StreamHandler()
     if log_level == 'info':
@@ -182,10 +182,10 @@ def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
     if log_level == 'debug':
         logger.setLevel(level=logging.DEBUG)
         ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+    formatter = logging.Formatter('%(levelname)s %(name)s %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-    logger.info("{} SSP file ".format(obj_name)
+    logger.info("{} SFH file ".format(obj_name)
                   + "path: {}".format(sfh_file))
     file_path = sfh_file
     if os.path.isfile(file_path):
@@ -194,6 +194,10 @@ def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
                 data, head = fits.getdata(file_path, header=header)
             else:
                 data = fits.getdata(file_path, header=header)
+            if header:
+                return head, data
+            else:
+                return data
         except Exception:
             logger.warning('Something wrong with SFH FITS file for' +
                            '{}'.format(obj_name))
