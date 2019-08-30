@@ -121,7 +121,6 @@ class pyHIIexplorer:
         hdul_seg_map.writeto(seg_path, overwrite=True)
         self.logger.debug('Saving fit files in {}'.format(output_path))
         self.logger.info('HIIexplorer finish for {}'.format(self.obj_name))
-        logging.shu
 
     def check_good_px(self, map_data, F_l, F_m, nx, ny):
         n_good = 0
