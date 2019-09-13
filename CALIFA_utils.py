@@ -6,6 +6,7 @@ from astropy.io import fits
 def get_slice_from_flux_elines(obj_name, fe_file, n_param=45, header=True,
                                log_level='info'):
     logger = logging.getLogger('get slice from fe file')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -42,6 +43,7 @@ def get_slice_from_flux_elines(obj_name, fe_file, n_param=45, header=True,
 def read_flux_elines_cubes(obj_name, fe_file, header=True,
                            log_level='info'):
     logger = logging.getLogger('read fe file')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -51,6 +53,8 @@ def read_flux_elines_cubes(obj_name, fe_file, header=True,
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
     logger.info("{} Flux elines file ".format(obj_name)
                   + "path: {}".format(fe_file))
@@ -73,9 +77,10 @@ def read_flux_elines_cubes(obj_name, fe_file, header=True,
 def get_center(obj_name, log_level='info'):
     XC = 0
     YC = 0
-    dir_path = '/home/espinosa/data/'
+    dir_path = '/home/espinosa/CALIFA_DATA/eCALIFA/'
     file_name = 'get_proc_elines_CALIFA.clean.csv'    
     logger = logging.getLogger('get center')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -85,6 +90,8 @@ def get_center(obj_name, log_level='info'):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
     logger.debug("File path {}".format(dir_path + file_name))
     try:
@@ -109,6 +116,7 @@ def get_center(obj_name, log_level='info'):
 
 def read_seg_map(seg_map, header=False, log_level='info'):
     logger = logging.getLogger('read seg map')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -136,6 +144,7 @@ def read_seg_map(seg_map, header=False, log_level='info'):
 
 def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
     logger = logging.getLogger('read ssp file')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -175,6 +184,7 @@ def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
 
 def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
     logger = logging.getLogger('read sfh file')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)

@@ -9,7 +9,7 @@ from astropy.io import fits
 class pyHIIexplorer:
     def __init__(self, Ha_map, nx, ny, max_dist, frac_peak, F_max, dist,
                  min_flux, obj_name, output_path, XC=None, YC=None,
-                 log_level='info', PSF=2.3):
+                 log_level='info', PSF=2.3,):
         self.Ha_map = Ha_map
         self.max_area = np.pi * max_dist**2
         self.F_max = F_max
@@ -34,6 +34,8 @@ class pyHIIexplorer:
             ch.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
         ch.setFormatter(formatter)
+        if (logger.hasHandlers()):
+            logger.handlers.clear()
         self.logger.addHandler(ch)
 
     def HIIrecover(self):
@@ -169,13 +171,15 @@ class pyHIIexplorer:
             i2 = i1 + 3
         if i2 > nx -1:
             i2 = nx - 1
-            i1 = i2 - 3
+            # i1 = i2 - 3
+            i1 = i2 - 2
         if j1 < 0:
             j1 = 0
             j2 = j1 + 3
         if j2 > ny - 1:
             j2 = ny - 1
-            j1 = j2 - 3
+            # j1 = j2 - 3
+            j1 = j2 - 2
         mask = np.ones(map_data.shape, np.bool)
         mask[j, :] = 0
         mask[:, i] = 0
@@ -304,7 +308,7 @@ class pyHIIexplorer:
 if __name__ == "__main__":
     description = 'Identifies clumpy structures on a line emission map'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('HA_MAP', help='Ha emission map PATH')
+    parser.add_argument('HA_MAP', help='Ha emission map FITS PATH')
     parser.add_argument('NX', help='x dimension of data map')
     parser.add_argument('NY', help='y dimension of data map')
     parser.add_argument('MAX_DIST', type=float, help='max distance to the' +
@@ -336,6 +340,7 @@ if __name__ == "__main__":
     XC = args.XC
     YC = args.YC
     log_level = args.LOG_LEVEL
+    print(nindex)
     pyHIIexplorer(Ha_map, nx, ny, max_dist, frac_peak, F_max, dist, min_flux,
                   obj_name, output_path, XC, YC,
                   log_level=log_level).HIIrecover()
