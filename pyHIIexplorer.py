@@ -5,25 +5,31 @@ import warnings
 import numpy as np
 import logging
 from astropy.io import fits
+from CALIFA_utils import read_fits_file
+from CALIFA_utils import get_slice_from_flux_elines, get_center
 
 class pyHIIexplorer:
-    def __init__(self, Ha_map, nx, ny, max_dist, frac_peak, F_max, dist,
-                 min_flux, obj_name, output_path, XC=None, YC=None,
-                 log_level='info', PSF=2.3,):
-        self.Ha_map = Ha_map
+    def __init__(self, Ha_map, max_dist=5.5, frac_peak=0.05, F_max=0.3, dist=0,
+                 min_flux=0.05, output_path, XC=None, YC=None,
+                 log_level='info', PSF=2.3, n_index=None):
+        if n_index is None:
+            self.header, self.Ha_map = read_flux_elines_cubes(Ha_map,
+                                                              header=True)
+        else:
+            self.header, self.Ha_map = get_slice_from_flux_elines(Ha_map,
+                                                                  header=True)
+        self.obj_name = self.get_name(Ha_map, log_level)
         self.max_area = np.pi * max_dist**2
         self.F_max = F_max
         self.frac_peak = frac_peak
         self.dist = dist
         self.min_flux = min_flux
         self.max_dist = max_dist
-        self.nx = nx
-        self.ny = ny
-        self.XC = XC
-        self.YC = YC
+        if XC is None or YC is None:
+            self.XC, self.YC = get_center(log_level)
         self.PSF = PSF
-        self.obj_name = obj_name
         self.output_path = output_path
+
         self.logger = logging.getLogger('pyHIIexplorer')
         ch = logging.StreamHandler()
         if log_level == 'info':
@@ -38,6 +44,70 @@ class pyHIIexplorer:
             logger.handlers.clear()
         self.logger.addHandler(ch)
 
+
+    def get_name(self, file_path, log_level='info'):
+        logger = logging.getLogger('get object name')
+        logger.propagate = False
+        ch = logging.StreamHandler()
+        if log_level == 'info':
+            logger.setLevel(level=logging.INFO)
+            ch.setLevel(logging.INFO)
+        if log_level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+            ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+        ch.setFormatter(formatter)
+        if (logger.hasHandlers()):
+            logger.handlers.clear()
+        logger.addHandler(ch)
+        logger.info("Reading {}".format(fits_file))
+        try:
+            obj_name = self.header['OBJECT']
+        except KeyError:
+            logger.warning("No OBJECT key in header. Getting obj name from" +
+                           " name file")
+            obj_name = self.fe_file.split('.', 1)[1][:-13]
+        return obj_name
+                    
+    def get_center(self, log_level='info'):
+        XC = 0
+        YC = 0
+        dir_path = '/home/espinosa/CALIFA_DATA/eCALIFA/'
+        file_name = 'get_proc_elines_CALIFA.clean.csv'    
+        logger = logging.getLogger('get center')
+        logger.propagate = False
+        ch = logging.StreamHandler()
+        if log_level == 'info':
+            logger.setLevel(level=logging.INFO)
+            ch.setLevel(logging.INFO)
+        if log_level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+            ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+        ch.setFormatter(formatter)
+        if (logger.hasHandlers()):
+            logger.handlers.clear()
+            logger.addHandler(ch)
+        logger.debug("File path {}".format(dir_path + file_name))
+        try:
+            with open(dir_path + file_name, 'r') as fileCAL:
+                reader = csv.reader(fileCAL)
+                for row in reader:
+                    if row[0] == self.obj_name:
+                        XC = float(row[167])
+                        YC = float(row[168])
+                        break
+            if XC == 0:
+                logger.warning('{} is not in'.format(self.obj_name) + 
+                               'get_proc_elines_CALIFA.csv file')
+                logger.warning('Setting XC=YC=0')
+        except FileNotFoundError:
+            logger.error('get_proc_elines_CALIFA.csv not found')
+        except:
+            logger.warning('Something wrong  with get center function')
+        return XC, YC
+
+       
     def HIIrecover(self):
         Ha_map = self.Ha_map
         nx = self.nx
@@ -110,7 +180,7 @@ class pyHIIexplorer:
         mask = seg_map > 0
         mask = ~mask
         mask_map = mask_map * mask
-
+        
         hdu_mask_map = fits.PrimaryHDU(mask_map)
         hdu_seg_map = fits.PrimaryHDU(seg_map)
         hdul_mask_map = fits.HDUList([hdu_mask_map])
@@ -309,38 +379,39 @@ if __name__ == "__main__":
     description = 'Identifies clumpy structures on a line emission map'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('HA_MAP', help='Ha emission map FITS PATH')
-    parser.add_argument('NX', help='x dimension of data map')
-    parser.add_argument('NY', help='y dimension of data map')
+    parser.add_argument('-n, --n_index', help='Ha_map index in the fits file',
+                        default=None)
     parser.add_argument('MAX_DIST', type=float, help='max distance to the' +
                         ' peak emission')
     parser.add_argument('FRAC_PEAK', help='Relative threshold with' +
-                        ' respect to this peak emission')
+                        ' respect to this peak emission', type=float)
     parser.add_argument('F_MAX', help='flux intensity threshold for' +
-                        ' the peak emission')
+                        ' the peak emission', type=float)
     parser.add_argument('DIST', help='Min distance of a peak emission to' +
-                        'to the center of galaxy' )
+                        'to the center of galaxy', type=float)
     parser.add_argument('MIN_FLUX', help='absolute threshold of the minimum' +
-                        ' intensity of ionized regions')
-    parser.add_argument('OBJ_NAME', help='object name for the output file')
+                        ' intensity of ionized regions', type=float)
     parser.add_argument('OUTPUT_PATH', help='output directory path')
-    parser.add_argument('XC', help='x coordinate of galactic center')
-    parser.add_argument('YC', help='y coordinate of galactic center')
-    parser.add_argument('LOG_LEVEL', help="Level of verbose: 'info'"+
-                        " or 'debug'" )
+    parser.add_argument('-XC', help='x coordinate of galactic center',
+                        default=None)
+    parser.add_argument('-YC', help='y coordinate of galactic center',
+                        default=None)
+    parser.add_argument('--LOG_LEVEL', help="Level of verbose: 'info'"+
+                        " or 'debug'", default='info')
+    parser.add_argument('--PSF', help='Point Spread Function value',
+                        type=float, default=2.7)
     args = parser.parse_args()
     Ha_map_path = args.HA_MAP
-    nx = args.NX
-    ny = args.NY
+    n_index = args.n_index
     max_dist = args.MAX_DIST
     frac_peak = args.FRAC_PEAK
     dist = args.DIST
     min_flux = args.MIN_FLUX
-    obj_name = args.OBJ_NAME
-    output_path = args.output_path
+    output_path = args.OUTPUT_PATH
     XC = args.XC
     YC = args.YC
     log_level = args.LOG_LEVEL
+    PSF = args.PSF
     print(nindex)
-    pyHIIexplorer(Ha_map, nx, ny, max_dist, frac_peak, F_max, dist, min_flux,
-                  obj_name, output_path, XC, YC,
-                  log_level=log_level).HIIrecover()
+    pyHIIexplorer(Ha_map, max_dist, frac_peak, F_max, dist, min_flux,
+                  output_path, XC, YC, log_level, PSF, n_index).HIIrecover()
