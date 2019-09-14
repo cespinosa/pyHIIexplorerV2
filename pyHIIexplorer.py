@@ -66,7 +66,7 @@ class pyHIIexplorer:
         try:
             obj_name = self.header['OBJECT']
         except KeyError:
-            logger.warning("No OBJECT key in header. Getting obj name from" +
+            logger.warn("No OBJECT key in header. Getting obj name from" +
                            " name file")
             obj_name = self.fe_file.split('.', 1)[1][:-13]
         return obj_name
@@ -105,13 +105,13 @@ class pyHIIexplorer:
                         YC = float(row[168])
                         break
             if XC == 0:
-                logger.warning('{} is not in '.format(self.obj_name) + 
+                logger.warn('{} is not in '.format(self.obj_name) + 
                                'get_proc_elines_CALIFA.csv file')
-                logger.warning('Setting XC=YC=0')
+                logger.warn('Setting XC=YC=0')
         except FileNotFoundError:
             logger.error('get_proc_elines_CALIFA.csv not found')
         #except:
-        #    logger.warning('Something wrong  with get center function')
+        #    logger.warn('Something wrong  with get center function')
         return XC, YC
 
        
@@ -189,7 +189,9 @@ class pyHIIexplorer:
         mask_map = mask_map * mask
         
         hdu_mask_map = fits.PrimaryHDU(mask_map)
+        hdu_mask_map.header.set('OBJECT', value=self.obj_name)
         hdu_seg_map = fits.PrimaryHDU(seg_map)
+        hdu_seg_map.header.set('OBJECT', value=self.obj_name)
         hdul_mask_map = fits.HDUList([hdu_mask_map])
         hdul_seg_map = fits.HDUList([hdu_seg_map])
         mask_name = "mask_Ha_EW.{}.fits.gz".format(self.obj_name)
