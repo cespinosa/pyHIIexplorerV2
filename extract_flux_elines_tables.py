@@ -7,7 +7,7 @@ import scipy.constants as scts
 from datetime import date
 from CALIFA_utils import read_flux_elines_cubes, read_seg_map
 
-def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
+def extract_flux_elines_table(seg_map, fe_file, output, log_level):
     logger = logging.getLogger('extract_flux_elines_table')
     ch = logging.StreamHandler()
     if log_level == 'info':
@@ -20,9 +20,15 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
     ch.setFormatter(formatter)
     logger.addHandler(ch)    
     spol = scts.speed_of_light/1000
-    header, data = read_flux_elines_cubes(obj_name, fe_file,
-                                        header=True, log_level=log_level)
+    header, data = read_flux_elines_cubes(fe_file,
+                                          header=True, log_level=log_level)
     (nz_dt, ny_dt, nx_dt) = data.shape
+    name_fe = header['OBJECT']
+    hdr, data_seg_map = read_seg_map(seg_map, header=True, log_level='info')
+    name_seg = hdr['OBJECT']
+    if name_fe != name_seg:
+        logger.warn('Object name in fe file not match with seg map file')
+    obj_name = name_fe
     crval1 = header['CRVAL1']
     cdelta1 = header['CDELT1']
     crpix1 = header['CRPIX1']
@@ -46,8 +52,8 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
         except Exception:
             grat = None
     if grat is None:
-        logger.warning("GRAT ID label is not in the label list")
-        logger.warning("Table for {} is not created".format(obj_name))
+        logger.warn("GRAT ID label is not in the label list")
+        logger.warn("Table for {} is not created".format(obj_name))
         return None
     fwhm_inst = 2.3
     if grat == 9:
@@ -63,7 +69,6 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
     if NZ_CUBE != NZ:
         looger.warn("Wrong emission line table! ({} != {})".format(NZ, NZ_CUBE))
         return None
-    data_seg_map = read_seg_map(seg_map, log_level='info')
     (ny_seg, nx_seg) = data_seg_map.shape
     if nx_dt > nx_seg or ny_dt > ny_seg:
         logger.warn("Dimension doesn't match ({}x{})!=({}x{})".format(nx_dt,
@@ -239,16 +244,14 @@ def extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level):
 if __name__ == "__main__":
     description = "Extract the mean flux emission lines values for every ionized regions from segmentation map and fe file of CALIFA survey"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('OBJ_NAME', help='object name for the output file')
     parser.add_argument('SEG_MAP', help='Segmentation path file')
     parser.add_argument('FE_FILE', help='flux elines path file')
     parser.add_argument('OUTPUT', help='outpat path directory')
-    parser.add_argument('LOG_LEVEL', help="Level of verbose: 'info'"+
-                        " or 'debug'", default='info')
+    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
+                        " or 'debug'", default='info', metavar='level')
     args = parser.parse_args()
-    obj_name = args.OBJ_NAME
     seg_map = args.SEG_MAP
     fe_file = args.FE_FILE
     output = args.OUTPUT
-    log_level = args.LOG_LEVEL
-    extract_flux_elines_table(obj_name, seg_map, fe_file, output, log_level)
+    log_level = args.log_level
+    extract_flux_elines_table(seg_map, fe_file, output, log_level)
