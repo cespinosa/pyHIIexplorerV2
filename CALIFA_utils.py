@@ -135,15 +135,15 @@ def get_center(obj_name, log_level='info'):
                     YC = float(row[168])
                     break
         if XC == 0:
-            logger.warning('{} is not in'.format(obj_name) + 
+            logger.warn('{} is not in'.format(obj_name) + 
                            'get_proc_elines_CALIFA.csv file')
-            logger.warning('Setting XC=YC=0')
+            logger.warn('Setting XC=YC=0')
         else:
             logger.debug('{} found in get_proc_elines'.format(obj_name))
     except FileNotFoundError:
         logger.error('get_proc_elines_CALIFA.csv not found')
     except:
-        logger.warning('Something wrong  with get center function')
+        logger.warn('Something wrong  with get center function')
     return XC, YC
 
 def read_seg_map(seg_map, header=False, log_level='info'):
@@ -158,6 +158,8 @@ def read_seg_map(seg_map, header=False, log_level='info'):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
     file_path = seg_map
     if os.path.isfile(file_path):
@@ -201,7 +203,7 @@ def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
                 logger.debug('Read SSP done')
                 return data
         except Exception:
-            logger.warning('Something wrong with SSP FITS file for' +
+            logger.warn('Something wrong with SSP FITS file for' +
                            '{}'.format(obj_name))
             if header:
                 return None, None
@@ -241,7 +243,7 @@ def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
             else:
                 return data
         except Exception:
-            logger.warning('Something wrong with SFH FITS file for' +
+            logger.warn('Something wrong with SFH FITS file for' +
                            '{}'.format(obj_name))
             if header:
                 return None, None
