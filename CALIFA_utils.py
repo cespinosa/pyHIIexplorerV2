@@ -3,7 +3,7 @@ import logging
 import csv
 from astropy.io import fits
 
-def get_slice_from_flux_elines(obj_name, fe_file, n_param=45, header=True,
+def get_slice_from_flux_elines(fe_file, n_param=45, header=True,
                                log_level='info'):
     logger = logging.getLogger('get slice from fe file')
     logger.propagate = False
@@ -16,14 +16,16 @@ def get_slice_from_flux_elines(obj_name, fe_file, n_param=45, header=True,
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
     if header:
         logger.debug('Getting data and header from fits file')
-        head, data = read_flux_elines_cubes(obj_name, fe_file,
+        head, data = read_flux_elines_cubes(fe_file,
                                             header=header, log_level=log_level)
     else:
         logger.debug('Getting only data from fits file')
-        data = read_flux_elines_cubes(obj_name, fe_file,
+        data = read_flux_elines_cubes(fe_file,
                                       header=header, log_level=log_level)
     
     if data is not None:
@@ -38,10 +40,41 @@ def get_slice_from_flux_elines(obj_name, fe_file, n_param=45, header=True,
             return None, None
         else:
             return None
-        
 
-def read_flux_elines_cubes(obj_name, fe_file, header=True,
-                           log_level='info'):
+def read_fits_file(fits_file, header=True, log_leve='info'):
+    logger = logging.getLogger('read fits file')
+    logger.propagate = False
+    ch = logging.StreamHandler()
+    if log_level == 'info':
+        logger.setLevel(level=logging.INFO)
+        ch.setLevel(logging.INFO)
+    if log_level == 'debug':
+        logger.setLevel(level=logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+    ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
+    logger.addHandler(ch)
+    logger.info("Reading {}".format(fits_file))
+    if os.path.isfile(fits_file):
+        if header:
+            data, header = fits.getdata(fits_file, header=header)
+            logger.debug('Read fits file Done')
+            return header, data
+        else:
+            data = fits.getdata(fits_file, header=header)
+            logger.debug('Read fits file Done')
+            return data
+    else:
+        logger.error('fits file not found')
+        if header:
+            return None, None
+        else:
+            return None
+
+
+def read_flux_elines_cubes(fe_file, header=True, log_level='info'):
     logger = logging.getLogger('read fe file')
     logger.propagate = False
     ch = logging.StreamHandler()
@@ -56,8 +89,7 @@ def read_flux_elines_cubes(obj_name, fe_file, header=True,
     if (logger.hasHandlers()):
         logger.handlers.clear()
     logger.addHandler(ch)
-    logger.info("{} Flux elines file ".format(obj_name)
-                  + "path: {}".format(fe_file))
+    logger.info("Reading {}".format(fe_file))
     if os.path.isfile(fe_file):
         if header:
             data, header = fits.getdata(fe_file, header=header)
@@ -68,7 +100,7 @@ def read_flux_elines_cubes(obj_name, fe_file, header=True,
             logger.debug('Read flux elines done')
             return data
     else:
-        logger.error('fe file not found for {}'.format(obj_name))
+        logger.error('file not found')
         if header:
             return None, None
         else:
