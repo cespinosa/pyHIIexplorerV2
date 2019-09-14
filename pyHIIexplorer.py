@@ -1,6 +1,9 @@
 #!/usr/bin/env python
+
+# ./pyHIIexplorer.py '/home/espinosa/CALIFA_DATA/eCALIFA/fe_files/flux_elines.NGC5947.cube.fits.gz' --index 45 5.5 0.05 0.3 0 0.05 /home/espinosa/tmp/
 import argparse
 import os
+import csv
 import warnings
 import numpy as np
 import logging
@@ -9,8 +12,8 @@ from CALIFA_utils import read_fits_file
 from CALIFA_utils import get_slice_from_flux_elines, get_center
 
 class pyHIIexplorer:
-    def __init__(self, Ha_map, max_dist=5.5, frac_peak=0.05, F_max=0.3, dist=0,
-                 min_flux=0.05, output_path, XC=None, YC=None,
+    def __init__(self, Ha_map, output_path, max_dist=5.5, frac_peak=0.05, F_max=0.3, dist=0,
+                 min_flux=0.05, XC=None, YC=None,
                  log_level='info', PSF=2.3, n_index=None):
         if n_index is None:
             self.header, self.Ha_map = read_flux_elines_cubes(Ha_map,
@@ -26,10 +29,10 @@ class pyHIIexplorer:
         self.min_flux = min_flux
         self.max_dist = max_dist
         if XC is None or YC is None:
-            self.XC, self.YC = get_center(log_level)
+            self.XC, self.YC = self.get_center(log_level=log_level)
         self.PSF = PSF
         self.output_path = output_path
-
+        self.nx, self.ny = self.get_size()
         self.logger = logging.getLogger('pyHIIexplorer')
         ch = logging.StreamHandler()
         if log_level == 'info':
@@ -40,10 +43,9 @@ class pyHIIexplorer:
             ch.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
         ch.setFormatter(formatter)
-        if (logger.hasHandlers()):
-            logger.handlers.clear()
+        if (self.logger.hasHandlers()):
+            self.logger.handlers.clear()
         self.logger.addHandler(ch)
-
 
     def get_name(self, file_path, log_level='info'):
         logger = logging.getLogger('get object name')
@@ -60,7 +62,7 @@ class pyHIIexplorer:
         if (logger.hasHandlers()):
             logger.handlers.clear()
         logger.addHandler(ch)
-        logger.info("Reading {}".format(fits_file))
+        logger.info("Reading {}".format(file_path))
         try:
             obj_name = self.header['OBJECT']
         except KeyError:
@@ -68,7 +70,12 @@ class pyHIIexplorer:
                            " name file")
             obj_name = self.fe_file.split('.', 1)[1][:-13]
         return obj_name
-                    
+
+    def get_size(self):
+        nx = self.header['NAXIS1']
+        ny = self.header['NAXIS2']
+        return nx, ny
+    
     def get_center(self, log_level='info'):
         XC = 0
         YC = 0
@@ -87,7 +94,7 @@ class pyHIIexplorer:
         ch.setFormatter(formatter)
         if (logger.hasHandlers()):
             logger.handlers.clear()
-            logger.addHandler(ch)
+        logger.addHandler(ch)
         logger.debug("File path {}".format(dir_path + file_name))
         try:
             with open(dir_path + file_name, 'r') as fileCAL:
@@ -98,13 +105,13 @@ class pyHIIexplorer:
                         YC = float(row[168])
                         break
             if XC == 0:
-                logger.warning('{} is not in'.format(self.obj_name) + 
+                logger.warning('{} is not in '.format(self.obj_name) + 
                                'get_proc_elines_CALIFA.csv file')
                 logger.warning('Setting XC=YC=0')
         except FileNotFoundError:
             logger.error('get_proc_elines_CALIFA.csv not found')
-        except:
-            logger.warning('Something wrong  with get center function')
+        #except:
+        #    logger.warning('Something wrong  with get center function')
         return XC, YC
 
        
@@ -130,7 +137,7 @@ class pyHIIexplorer:
         flux_PEAKS = np.array([])
         stop_flag = True
         n_good = self.check_good_px(Ha_map, F_l=0, F_m=1e30, nx=nx, ny=ny)
-        self.logger.info('Good Pixels (F > {} and F < {} = {}'.format(0,
+        self.logger.info('Good Pixels (F > {} and F < {}) = {}'.format(0,
                                                                   1e30,
                                                                   n_good))
         self.logger.info('[{} x {}](ny x nx))'.format(ny, nx))
@@ -377,10 +384,11 @@ class pyHIIexplorer:
         
 if __name__ == "__main__":
     description = 'Identifies clumpy structures on a line emission map'
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(prog='pyHIIExplorer',
+                                     description=description)
     parser.add_argument('HA_MAP', help='Ha emission map FITS PATH')
-    parser.add_argument('-n, --n_index', help='Ha_map index in the fits file',
-                        default=None)
+    parser.add_argument('--index', help='Ha_map index in the fits file',
+                        default=None, metavar='N')
     parser.add_argument('MAX_DIST', type=float, help='max distance to the' +
                         ' peak emission')
     parser.add_argument('FRAC_PEAK', help='Relative threshold with' +
@@ -396,13 +404,14 @@ if __name__ == "__main__":
                         default=None)
     parser.add_argument('-YC', help='y coordinate of galactic center',
                         default=None)
-    parser.add_argument('--LOG_LEVEL', help="Level of verbose: 'info'"+
-                        " or 'debug'", default='info')
+    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
+                        " or 'debug'", default='info', metavar='level')
     parser.add_argument('--PSF', help='Point Spread Function value',
-                        type=float, default=2.7)
+                        type=float, default=2.7, metavar='PSF_value')
     args = parser.parse_args()
     Ha_map_path = args.HA_MAP
-    n_index = args.n_index
+    n_index = args.index
+    F_max = args.F_MAX
     max_dist = args.MAX_DIST
     frac_peak = args.FRAC_PEAK
     dist = args.DIST
@@ -410,8 +419,7 @@ if __name__ == "__main__":
     output_path = args.OUTPUT_PATH
     XC = args.XC
     YC = args.YC
-    log_level = args.LOG_LEVEL
+    log_level = args.log_level
     PSF = args.PSF
-    print(nindex)
-    pyHIIexplorer(Ha_map, max_dist, frac_peak, F_max, dist, min_flux,
-                  output_path, XC, YC, log_level, PSF, n_index).HIIrecover()
+    pyHIIexplorer(Ha_map_path, output_path, max_dist, frac_peak, F_max, dist,
+                  min_flux, XC, YC, log_level, PSF, n_index).HIIrecover()
