@@ -9,9 +9,13 @@ fe_dir = '/home/espinosa/CALIFA_DATA/dataproducts/fe_files/'
 sfh_dir = '/home/espinosa/CALIFA_DATA/dataproducts/sfh_files/'
 ssp_dir = '/home/espinosa/CALIFA_DATA/dataproducts/ssp_files/'
 
-def extract_HIIregions(obj_name, max_dist=5.5, frac_peak=0.05, F_max=0.3,
-                       dist=0, min_flux=0.05,
-                       output_path='/home/espinosa/tmp/'):
+def extract_HIIregions(obj_name):
+    max_dist=5.5
+    frac_peak=0.05
+    F_max=0.3
+    dist=0
+    min_flux=0.05
+    output_path='/home/espinosa/tmp/'
     fe_file = fe_dir + 'flux_elines.{}.cube.fits.gz'.format(obj_name)
     sfh_file = sfh_dir + '{}.SFH.cube.fits.gz'.format(obj_name)
     ssp_file = ssp_dir + '{}.SSP.cube.fits.gz'.format(obj_name)
