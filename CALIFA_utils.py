@@ -169,7 +169,10 @@ def read_seg_map(seg_map, header=False, log_level='info'):
             data = fits.getdata(file_path, header=header)
     else:
         logger.warn('No exist segmentation map file')
-        return [0]
+        if header:
+            return None, [0]
+        else:
+            [0]
     logger.info('Read Segmentation map file done')
     if header:
         return header, data
