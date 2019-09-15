@@ -176,7 +176,7 @@ def read_seg_map(seg_map, header=False, log_level='info'):
     else:
         return data
 
-def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
+def read_SSP_fits(ssp_file, header=True, log_level='info'):
     logger = logging.getLogger('read ssp file')
     logger.propagate = False
     ch = logging.StreamHandler()
@@ -188,9 +188,10 @@ def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
-    logger.info("{} SSP file ".format(obj_name)
-                  + "path: {}".format(ssp_file))
+    logger.info("Reading SSP cube: {}".format(ssp_file))
     file_path = ssp_file
     if os.path.isfile(file_path):
         try:
@@ -216,7 +217,7 @@ def read_SSP_fits(obj_name, ssp_file, header=True, log_level='info'):
         else:
             return None
 
-def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
+def read_SFH_fits(sfh_file, header=True, log_level='info'):
     logger = logging.getLogger('read sfh file')
     logger.propagate = False
     ch = logging.StreamHandler()
@@ -228,9 +229,10 @@ def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
-    logger.info("{} SFH file ".format(obj_name)
-                  + "path: {}".format(sfh_file))
+    logger.info("Reading SFH cube: {}".format(sfh_file))
     file_path = sfh_file
     if os.path.isfile(file_path):
         try:
@@ -243,14 +245,13 @@ def read_SFH_fits(obj_name, sfh_file, header=True, log_level='info'):
             else:
                 return data
         except Exception:
-            logger.warn('Something wrong with SFH FITS file for' +
-                           '{}'.format(obj_name))
+            logger.warn('Something wrong with SFH FITS file')
             if header:
                 return None, None
             else:
                 return None
     else:
-        logger.error('SFH Fits file not found for {}'.format(obj_name))
+        logger.error('SFH Fits file not found')
         if header:
             return None, None
         else:
