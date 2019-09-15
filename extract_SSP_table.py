@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+
+# ./extract_SSP_table.py /home/espinosa/tmp/seg_Ha_EW.NGC5947.fits.gz /home/espinosa/CALIFA_DATA/eCALIFA/ssp_files/NGC5947.SSP.cube.fits.gz /home/espinosa/CALIFA_DATA/eCALIFA/fe_files/flux_elines.NGC5947.cube.fits.gz /home/espinosa/tmp/
+ 
+
 import numpy as np
 import logging
 import argparse
@@ -5,8 +10,9 @@ import csv
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SSP_fits, get_slice_from_flux_elines
 
-def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, log_level):
+def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
     logger = logging.getLogger('extract_SSP_table')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -16,12 +22,21 @@ def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, log_level):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
     
-    head, data = read_SSP_fits(obj_name, ssp_file, log_level)
-    hd_fe, dt_fe = get_slice_from_flux_elines(obj_name, fe_file, 45,
+    head, data = read_SSP_fits(ssp_file, header=True, log_level=log_level)
+    hd_fe, dt_fe = get_slice_from_flux_elines(fe_file, 45,
                                               header=True, log_level=log_level)
-    seg_map = read_seg_map(seg_map, log_level='info')
+    hdr, seg_map = read_seg_map(seg_map, header=True, log_level='info')
+    name_ssp = head['OBJECT']
+    name_seg = hdr['OBJECT']
+    if name_ssp != name_seg:
+        logger.warn('OBJECT in header files does not match')
+    obj_name = name_ssp
+    logger.info('Starting extract SSP table for galaxy ' + obj_name)
+
     ns = int(np.max(seg_map))
     (nz_dt, ny_dt, nx_dt) = data.shape
     crval1 = hd_fe['CRVAL1']
@@ -172,3 +187,20 @@ def extract_SSP_table(obj_name, seg_map, ssp_file, fe_file,  output, log_level):
     else:
          logger.info("No regions detected for " + obj_name) 
     logger.info('Extract SSP table finish for {}'.format(obj_name))
+
+if __name__ == "__main__":
+    description = "Extract the mean SSP values for every ionized regions from segmentation map and fe file of CALIFA survey"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('SEG_MAP', help='Segmentation path file')
+    parser.add_argument('SSP_FILE', help='SSP path file')
+    parser.add_argument('FE_FILE', help='flux elines path file')
+    parser.add_argument('OUTPUT', help='outpat path directory')
+    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
+                        " or 'debug'", default='info', metavar='level')
+    args = parser.parse_args()
+    seg_map = args.SEG_MAP
+    ssp_file = args.SSP_FILE
+    fe_file = args.FE_FILE
+    output = args.OUTPUT
+    log_level = args.log_level
+    extract_SSP_table(seg_map, ssp_file, fe_file, output, log_level)
