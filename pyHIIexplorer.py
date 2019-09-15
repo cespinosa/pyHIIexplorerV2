@@ -34,6 +34,7 @@ class pyHIIexplorer:
         self.output_path = output_path
         self.nx, self.ny = self.get_size()
         self.logger = logging.getLogger('pyHIIexplorer')
+        self.logger.propagate = False
         ch = logging.StreamHandler()
         if log_level == 'info':
             self.logger.setLevel(level=logging.INFO)
@@ -105,7 +106,7 @@ class pyHIIexplorer:
                         YC = float(row[168])
                         break
             if XC == 0:
-                logger.warn('{} is not in '.format(self.obj_name) + 
+                logger.warn('{} is not in '.format(str(self.obj_name)) + 
                                'get_proc_elines_CALIFA.csv file')
                 logger.warn('Setting XC=YC=0')
         except FileNotFoundError:
