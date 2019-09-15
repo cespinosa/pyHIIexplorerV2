@@ -1,11 +1,18 @@
+#!/usr/bin/env python
+
+#./extract_SFH_table.py /home/espinosa/tmp/seg_Ha_EW.NGC5947.fits.gz /home/espinosa/CALIFA_DATA/eCALIFA/sfh_files/NGC5947.SFH.cube.fits.gz /home/espinosa/tmp/
+
+
 import logging
+import argparse
 import numpy as np
 import pandas as pd
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SFH_fits
 
-def extract_SFH_table(obj_name, seg_map, sfh_file, output, log_level):
+def extract_SFH_table(seg_map, sfh_file, output, log_level):
     logger = logging.getLogger('extract_SFH_table')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -15,15 +22,21 @@ def extract_SFH_table(obj_name, seg_map, sfh_file, output, log_level):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)
-    
-    logging.debug('Starting extract SFH table for galaxy ' + obj_name)
-    
-    head, data = read_SFH_fits(obj_name, sfh_file, log_level=log_level)
-    seg_map = read_seg_map(seg_map, log_level=log_level)
+    head, data = read_SFH_fits(sfh_file, header=True, log_level=log_level)
+    hdr, seg_map = read_seg_map(seg_map, header=True, log_level=log_level)
     if head is None or data is None:
-        logging.warning('Error with SFH file for {}'.format(obj_name))
+        logger.warn('Error with SFH file {}'.format(sfh_file))
         return None
+    name_sfh = head['OBJECT']
+    name_seg = hdr['OBJECT']
+    if name_sfh != name_seg:
+        logger.warn('OBJECT in header files does not match')
+    obj_name = name_sfh
+    logger.info('Starting extract SFH table for galaxy ' + obj_name)
+    
     ns = int(np.max(seg_map))
     if ns > 0:
         nr = np.unique(seg_map)[1:]
@@ -107,3 +120,18 @@ def extract_SFH_table(obj_name, seg_map, sfh_file, output, log_level):
     else:
         logger.info("No regions detected for " + obj_name)
     logger.info('Extract SFH table finish for {}'.format(obj_name))
+
+if __name__ == "__main__":
+    description = "Extract the mean SFH values for every ionized regions from segmentation map and fe file of CALIFA survey"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('SEG_MAP', help='Segmentation path file')
+    parser.add_argument('SFH_FILE', help='SFH path file')
+    parser.add_argument('OUTPUT', help='outpat path directory')
+    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
+                        " or 'debug'", default='info', metavar='level')
+    args = parser.parse_args()
+    seg_map = args.SEG_MAP
+    sfh_file = args.SFH_FILE
+    output = args.OUTPUT
+    log_level = args.log_level
+    extract_SFH_table(seg_map, sfh_file, output, log_level)
