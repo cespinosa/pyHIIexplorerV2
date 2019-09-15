@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+#./extract_flux_elines_tables.py /home/espinosa/tmp/seg_Ha_EW.NGC5947.fits.gz /home/espinosa/CALIFA_DATA/eCALIFA/fe_files/flux_elines.NGC5947.cube.fits.gz /home/espinosa/tmp/
+
+
 import logging
 import argparse
 import csv
@@ -9,6 +13,7 @@ from CALIFA_utils import read_flux_elines_cubes, read_seg_map
 
 def extract_flux_elines_table(seg_map, fe_file, output, log_level):
     logger = logging.getLogger('extract_flux_elines_table')
+    logger.propagate = False
     ch = logging.StreamHandler()
     if log_level == 'info':
         logger.setLevel(level=logging.INFO)
@@ -18,6 +23,8 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
         ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
     ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
     logger.addHandler(ch)    
     spol = scts.speed_of_light/1000
     header, data = read_flux_elines_cubes(fe_file,
@@ -27,8 +34,9 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
     hdr, data_seg_map = read_seg_map(seg_map, header=True, log_level='info')
     name_seg = hdr['OBJECT']
     if name_fe != name_seg:
-        logger.warn('Object name in fe file not match with seg map file')
+        logger.warn('OBJECT in header files does not match')
     obj_name = name_fe
+    logger.info('Starting extract fe table for galaxy ' + obj_name)
     crval1 = header['CRVAL1']
     cdelta1 = header['CDELT1']
     crpix1 = header['CRPIX1']
@@ -152,8 +160,8 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
             NC = 10
             writer = csv.writer(fp)
             for i, wl in enumerate(wavelengths):
-                for I in [i, i+4*NZ, i+3*NZ, i+7*NZ,
-                          i+NZ, i+5*NZ, i+2*NZ, i+6*NZ]:
+                for I in [i, i+4*NZ, i+3*NZ, i+7*NZ]:
+                          # i+NZ, i+5*NZ, i+2*NZ, i+6*NZ]:
                     header_now = header['NAME{}'.format(I)]
                     for s_char in ' []':
                         header_now = header_now.replace(s_char, '')
@@ -216,8 +224,8 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
                 Row_lines.append(vel)
                 Row_lines.append(disp)
                 for j in np.arange(NZ):
-                    for J in [j, j+4*NZ, j+3*NZ, j+7*NZ,
-                              i+NZ, i+5*NZ, i+2*NZ, i+6*NZ]:
+                    for J in [j, j+4*NZ, j+3*NZ, j+7*NZ]:
+                              # i+NZ, i+5*NZ, i+2*NZ, i+6*NZ]:
                         val = a_out[J, i]
                         val_sq = a_out_sq[J, i]
                         val_med = a_out_med[J, i]
