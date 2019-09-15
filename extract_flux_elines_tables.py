@@ -32,61 +32,62 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
     (nz_dt, ny_dt, nx_dt) = data.shape
     name_fe = header['OBJECT']
     hdr, data_seg_map = read_seg_map(seg_map, header=True, log_level='info')
-    name_seg = hdr['OBJECT']
-    if name_fe != name_seg:
-        logger.warn('OBJECT in header files does not match')
-    obj_name = name_fe
-    logger.info('Starting extract fe table for galaxy ' + obj_name)
-    crval1 = header['CRVAL1']
-    cdelta1 = header['CDELT1']
-    crpix1 = header['CRPIX1']
-    crval2 = header['CRVAL2']
-    cdelta2 = header['CDELT2']
-    crpix2 = header['CRPIX2']
-    name = header['OBJECT']
-    califaID = header['CALIFAID']
-    label_list = ('HIERARCH V500 PPAK P1 GRAT_ID',
-                  'HIERARCH V500 PPAK P3F1 GRAT_ID',
-                  'HIERARCH V500 PPAK P3F2 GRAT_ID',
-                  'HIERARCH V500 PPAK P3F3 GRAT_ID',
-                  'HIERARCH V500 PPAK P6F2 GRAT_ID',
-                  'HIERARCH V500 PPAK P7F11 GRAT_ID',
-                  'HIERARCH V500 PPAK P9F2 GRAT_ID')
-    for label in label_list:
-        try:
-            grat = header[label]
-            logger.debug("Using GRAT_ID label:{}".format(label))
-            break
-        except Exception:
-            grat = None
-    if grat is None:
-        logger.warn("GRAT ID label is not in the label list")
-        logger.warn("Table for {} is not created".format(obj_name))
-        return None
-    fwhm_inst = 2.3
-    if grat == 9:
-        fwhm_inst = 6.0
-    wavelengths = np.loadtxt('emission_lines.LIST',
-                             comments='#', usecols=[0])
-    name_elines = np.loadtxt('emission_lines.LIST', comments='#',
-                             usecols=[1], dtype=np.str)
-    nz_Ha = np.where(name_elines == 'Ha')[0].item()
-    NZ = wavelengths.size
-    logger.debug('Index of Halpha = {}'.format(nz_Ha))
-    NZ_CUBE = nz_dt/8
-    if NZ_CUBE != NZ:
-        looger.warn("Wrong emission line table! ({} != {})".format(NZ, NZ_CUBE))
-        return None
-    (ny_seg, nx_seg) = data_seg_map.shape
-    if nx_dt > nx_seg or ny_dt > ny_seg:
-        logger.warn("Dimension doesn't match ({}x{})!=({}x{})".format(nx_dt,
-                                                                ny_dt,
-                                                                nx_seg,
-                                                                ny_seg))
-        return None
     ns = int(np.max(data_seg_map))
-    regions_id = np.unique(data_seg_map)
     if ns > 0:
+        name_seg = hdr['OBJECT']
+        if name_fe != name_seg:
+            logger.warn('OBJECT in header files does not match')
+        obj_name = name_fe
+        logger.info('Starting extract fe table for galaxy {}'.format(obj_name))
+        crval1 = header['CRVAL1']
+        cdelta1 = header['CDELT1']
+        crpix1 = header['CRPIX1']
+        crval2 = header['CRVAL2']
+        cdelta2 = header['CDELT2']
+        crpix2 = header['CRPIX2']
+        name = header['OBJECT']
+        califaID = header['CALIFAID']
+        label_list = ('HIERARCH V500 PPAK P1 GRAT_ID',
+                      'HIERARCH V500 PPAK P3F1 GRAT_ID',
+                      'HIERARCH V500 PPAK P3F2 GRAT_ID',
+                      'HIERARCH V500 PPAK P3F3 GRAT_ID',
+                      'HIERARCH V500 PPAK P6F2 GRAT_ID',
+                      'HIERARCH V500 PPAK P7F11 GRAT_ID',
+                      'HIERARCH V500 PPAK P9F2 GRAT_ID')
+        for label in label_list:
+            try:
+                grat = header[label]
+                logger.debug("Using GRAT_ID label:{}".format(label))
+                break
+            except Exception:
+                grat = None
+        if grat is None:
+            logger.warn("GRAT ID label is not in the label list")
+            logger.warn("Table for {} is not created".format(obj_name))
+            return None
+        fwhm_inst = 2.3
+        if grat == 9:
+            fwhm_inst = 6.0
+        wavelengths = np.loadtxt('emission_lines.LIST',
+                                 comments='#', usecols=[0])
+        name_elines = np.loadtxt('emission_lines.LIST', comments='#',
+                                 usecols=[1], dtype=np.str)
+        nz_Ha = np.where(name_elines == 'Ha')[0].item()
+        NZ = wavelengths.size
+        logger.debug('Index of Halpha = {}'.format(nz_Ha))
+        NZ_CUBE = nz_dt/8
+        if NZ_CUBE != NZ:
+            looger.warn("Wrong emission line table! ({} != {})".format(NZ, NZ_CUBE))
+            return None
+        (ny_seg, nx_seg) = data_seg_map.shape
+        if nx_dt > nx_seg or ny_dt > ny_seg:
+            logger.warn("Dimension doesn't match ({}x{})!=({}x{})".format(nx_dt,
+                                                                          ny_dt,
+                                                                          nx_seg,
+                                                                          ny_seg))
+            return None
+
+        regions_id = np.unique(data_seg_map)
         logger.debug("{} sources detected in {}".format(ns, obj_name))
         a_out = np.zeros((nz_dt, ns))
         a_out_med = np.zeros((nz_dt, ns))
@@ -120,7 +121,7 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
             a_out_med[:, i] = mean_array
             a_out_sq[:, i] = mean_array_sq/npt*(1+1.6*np.log(npt))
         logger.debug('Output path: ' + output)
-        output_name = "HII." + obj_name + ".flux_elines.csv"
+        output_name = "HII.{}.flux_elines.csv".format(obj_name)
         with open(output + output_name, "wt") as fp:
             logger.debug("Writing csv file in:{}".format(output
                                                          + output_name))
@@ -246,7 +247,8 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
                 writer.writerow(Row_lines)
             logger.debug(output_name + " created")
     else:
-        logger.info("No regions detected for " + obj_name)
+        obj_name = name_fe
+        logger.info("No regions detected for {}".format(obj_name))
     logger.info("extract flux elines table finish for {}".format(obj_name))
 
 if __name__ == "__main__":

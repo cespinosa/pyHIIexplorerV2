@@ -30,24 +30,24 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
     hd_fe, dt_fe = get_slice_from_flux_elines(fe_file, 45,
                                               header=True, log_level=log_level)
     hdr, seg_map = read_seg_map(seg_map, header=True, log_level='info')
-    name_ssp = head['OBJECT']
-    name_seg = hdr['OBJECT']
-    if name_ssp != name_seg:
-        logger.warn('OBJECT in header files does not match')
-    obj_name = name_ssp
-    logger.info('Starting extract SSP table for galaxy ' + obj_name)
-
     ns = int(np.max(seg_map))
-    (nz_dt, ny_dt, nx_dt) = data.shape
-    crval1 = hd_fe['CRVAL1']
-    cdelt1 = hd_fe['CDELT1']
-    crpix1 = hd_fe['CRPIX1']
-    crval2 = hd_fe['CRVAL2']
-    cdelt2 = hd_fe['CDELT2']
-    crpix2 = hd_fe['CRPIX2']
-    NAME = hd_fe['OBJECT']
-    CALIFAID = hd_fe['CALIFAID']
+    name_ssp = head['OBJECT']
     if ns > 0:
+        name_seg = hdr['OBJECT']
+        if name_ssp != name_seg:
+            logger.warn('OBJECT in header files does not match')
+        obj_name = name_ssp
+        logger.info('Starting extract SSP table for galaxy {}'.format(obj_name))
+        
+        (nz_dt, ny_dt, nx_dt) = data.shape
+        crval1 = hd_fe['CRVAL1']
+        cdelt1 = hd_fe['CDELT1']
+        crpix1 = hd_fe['CRPIX1']
+        crval2 = hd_fe['CRVAL2']
+        cdelt2 = hd_fe['CDELT2']
+        crpix2 = hd_fe['CRPIX2']
+        NAME = hd_fe['OBJECT']
+        CALIFAID = hd_fe['CALIFAID']
         nr = np.unique(seg_map)[1:]
         nz = data.shape[0]
         seg = np.copy(seg_map)
@@ -87,7 +87,7 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
             a_out_med[:, i] = mean_array
             a_out_sq[:, i] = mean_array_sq/npt
         logger.debug('Output path: ' + output)
-        output_name = "HII." + obj_name + ".SSP.csv"
+        output_name = "HII.{}.SSP.csv".format(obj_name)
         with open(output + output_name, "wt") as fp:
             logger.debug("Writing csv file in:{}".format(output
                                                          + output_name))
@@ -185,7 +185,8 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
                     Row_lines.append(val)
                 writer.writerow(Row_lines)
     else:
-         logger.info("No regions detected for " + obj_name) 
+        obj_name = name_ssp
+        logger.info("No regions detected for {}".format(obj_name))
     logger.info('Extract SSP table finish for {}'.format(obj_name))
 
 if __name__ == "__main__":

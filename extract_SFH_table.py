@@ -31,14 +31,13 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level):
         logger.warn('Error with SFH file {}'.format(sfh_file))
         return None
     name_sfh = head['OBJECT']
-    name_seg = hdr['OBJECT']
-    if name_sfh != name_seg:
-        logger.warn('OBJECT in header files does not match')
-    obj_name = name_sfh
-    logger.info('Starting extract SFH table for galaxy ' + obj_name)
-    
     ns = int(np.max(seg_map))
     if ns > 0:
+        name_seg = hdr['OBJECT']
+        if name_sfh != name_seg:
+            logger.warn('OBJECT in header files does not match')
+        obj_name = name_sfh
+        logger.info('Starting extract SFH table for galaxy {}'.format(obj_name))
         nr = np.unique(seg_map)[1:]
         nz = data.shape[0]
         seg = np.copy(seg_map)
@@ -48,7 +47,7 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level):
             means_array_per_region = np.array([])
             #  print('current region',n)
             mask_region = seg == n
-            label = obj_name + '-{}'.format(int(n))
+            label = '{}-{}'.format(obj_name, int(n))
             label_rows.append(label)
             for slide in np.arange(nz):
                 #  print('\t current slide',slide)
@@ -98,7 +97,7 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level):
         df.index = label_rows
         df.columns = label_col
         logger.debug('Output path: ' + output)
-        output_name = "HII." + obj_name + ".SFH.csv"
+        output_name = "HII.{}.SFH.csv".format(obj_name)
         with open(output + output_name, "wt") as fp:
             logger.debug("Writing csv file in:{}".format(output
                                                          + output_name))
@@ -118,7 +117,8 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level):
                 fp.write('#  COLUMN{}:  {}\n'.format(i+2, label))
             df.to_csv(fp, index_label='HIIREGID')
     else:
-        logger.info("No regions detected for " + obj_name)
+        obj_name = name_sfh
+        logger.info("No regions detected for {}".format(obj_name))
     logger.info('Extract SFH table finish for {}'.format(obj_name))
 
 if __name__ == "__main__":
