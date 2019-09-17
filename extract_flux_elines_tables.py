@@ -47,27 +47,27 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
         crpix2 = header['CRPIX2']
         name = header['OBJECT']
         califaID = header['CALIFAID']
-        label_list = ('HIERARCH V500 PPAK P1 GRAT_ID',
+        # label_list = ('HIERARCH V500 PPAK P1 GRAT_ID',
                       'HIERARCH V500 PPAK P3F1 GRAT_ID',
                       'HIERARCH V500 PPAK P3F2 GRAT_ID',
                       'HIERARCH V500 PPAK P3F3 GRAT_ID',
                       'HIERARCH V500 PPAK P6F2 GRAT_ID',
                       'HIERARCH V500 PPAK P7F11 GRAT_ID',
                       'HIERARCH V500 PPAK P9F2 GRAT_ID')
-        for label in label_list:
-            try:
-                grat = header[label]
-                logger.debug("Using GRAT_ID label:{}".format(label))
-                break
-            except Exception:
-                grat = None
-        if grat is None:
-            logger.warn("GRAT ID label is not in the label list")
-            logger.warn("Table for {} is not created".format(obj_name))
-            return None
-        fwhm_inst = 2.3
-        if grat == 9:
-            fwhm_inst = 6.0
+        # for label in label_list:
+        #     try:
+        #         grat = header[label]
+        #         logger.debug("Using GRAT_ID label:{}".format(label))
+        #         break
+        #     except Exception:
+        #         grat = None
+        # if grat is None:
+        #     logger.warn("GRAT ID label is not in the label list")
+        #     logger.warn("Table for {} is not created".format(obj_name))
+        #     return None
+        # fwhm_inst = 2.3
+        # if grat == 9:
+        #     fwhm_inst = 6.0
         wavelengths = np.loadtxt('emission_lines.LIST',
                                  comments='#', usecols=[0])
         name_elines = np.loadtxt('emission_lines.LIST', comments='#',
@@ -233,12 +233,12 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
                         header_now = header['NAME{}'.format(J)]
                         for char in ' []':
                             header_now = header_now.replace(char, '')
-                        if "disp" in header_now:
-                            val = val_med
-                            val_now = np.sqrt(np.abs(val**2-fwhm_inst**2))
-                            val = (val_now/wavelengths[j]) * spol
-                        if "vel" in header_now:
-                            val = val_med
+                        # if "disp" in header_now:
+                        #     val = val_med
+                        #     val_now = np.sqrt(np.abs(val**2-fwhm_inst**2))
+                        #     val = (val_now/wavelengths[j]) * spol
+                        # if "vel" in header_now:
+                        #     val = val_med
                         if "EW" in header_now:
                             val = val_med
                         if "e_" in header_now:
