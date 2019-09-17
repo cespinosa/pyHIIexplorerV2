@@ -69,7 +69,7 @@ class pyHIIexplorer:
         except KeyError:
             logger.warn("No OBJECT key in header. Getting obj name from" +
                            " name file")
-            obj_name = self.fe_file.split('.', 1)[1][:-13]
+            obj_name = file_path.split('.', 1)[1][:-13]
         return obj_name
 
     def get_size(self):
