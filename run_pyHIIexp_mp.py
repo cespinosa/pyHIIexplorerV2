@@ -3,14 +3,23 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool
 from run_pyHIIexp import extract_HIIregions
+from run_pyHIIexp import extract_HIIregions_p
+
 eCALIFA_path = '/home/espinosa/CALIFA_DATA/eCALIFA/'
 pCALIFA_path = '/home/espinosa/CALIFA_DATA/pCALIFA/'
 
-def make_catalog(obj_names):
-    pool = Pool(4)
+def make_catalog_eCALIFA(obj_names):
+    pool = Pool(8)
     pool.starmap(extract_HIIregions, zip(obj_names))
     pool.close()
     pool.join()
+
+def make_catalog_pCALIFA(obj_names):
+    pool = Pool(8)
+    pool.starmap(extract_HIIregions_p, zip(obj_names))
+    pool.close()
+    pool.join()
+
     
 def get_names_eCALIFA():
     path_files = glob.glob(eCALIFA_path + 'fe_files/'  + 'flux_elines.*')
@@ -40,7 +49,7 @@ def get_names_get_proc_files_eCALIFA(path=None, clean_catalog=True):
     return galaxy_names
 
 def get_names_pCALIFA():
-    path_files = glob.glob(pCALIFA_path + 'fe_files/'  + 'flux_elines.*')
+    path_files = glob.glob(pCALIFA_path + 'fe_files_corr/'  + 'flux_elines.*')
     obj_names = [path_file.split('.', 1)[1][:-13]
              for path_file in path_files ]
     return obj_names
