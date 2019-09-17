@@ -10,13 +10,13 @@ pCALIFA_path = '/home/espinosa/CALIFA_DATA/pCALIFA/'
 
 def make_catalog_eCALIFA(obj_names):
     pool = Pool(8)
-    pool.starmap(extract_HIIregions, zip(obj_names))
+    pool.starmap(extract_HIIregions, zip(obj_names), 1)
     pool.close()
     pool.join()
 
 def make_catalog_pCALIFA(obj_names):
-    pool = Pool(8)
-    pool.starmap(extract_HIIregions_p, zip(obj_names))
+    pool = Pool(4)
+    pool.starmap(extract_HIIregions_p, zip(obj_names), 1)
     pool.close()
     pool.join()
 

@@ -41,13 +41,14 @@ def extract_HIIregions_p(obj_name):
     F_max=0.3
     dist=0
     min_flux=0.05
+    p_flag = True
     output_path='/home/espinosa/CALIFA_DATA/pCALIFA/catalog/'
     fe_file = p_fe_dir + 'flux_elines.{}.cube.fits.gz'.format(obj_name)
     sfh_file = p_sfh_dir + '{}.SFH.cube.fits.gz'.format(obj_name)
     ssp_file = p_ssp_dir + '{}.SSP.cube.fits.gz'.format(obj_name)
 
     a = pyHIIexplorer(fe_file, output_path, max_dist, frac_peak, F_max, dist,
-                      min_flux, log_level=log_level, n_index=45)
+                      min_flux, p_flag, log_level=log_level, n_index=45)
     a.HIIrecover()
 
     seg_map = output_path + "seg_Ha_EW.{}.fits.gz".format(obj_name)

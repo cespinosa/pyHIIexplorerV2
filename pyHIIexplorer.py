@@ -13,7 +13,7 @@ from CALIFA_utils import get_slice_from_flux_elines, get_center
 
 class pyHIIexplorer:
     def __init__(self, Ha_map, output_path, max_dist=5.5, frac_peak=0.05, F_max=0.3, dist=0,
-                 min_flux=0.05, XC=None, YC=None,
+                 min_flux=0.05, p_flag=False, XC=None, YC=None,
                  log_level='info', PSF=2.3, n_index=None):
         if n_index is None:
             self.header, self.Ha_map = read_flux_elines_cubes(Ha_map,
@@ -29,7 +29,7 @@ class pyHIIexplorer:
         self.min_flux = min_flux
         self.max_dist = max_dist
         if XC is None or YC is None:
-            self.XC, self.YC = self.get_center(log_level=log_level)
+            self.XC, self.YC = self.get_center(p_flag, log_level=log_level)
         self.PSF = PSF
         self.output_path = output_path
         self.nx, self.ny = self.get_size()
@@ -77,11 +77,15 @@ class pyHIIexplorer:
         ny = self.header['NAXIS2']
         return nx, ny
     
-    def get_center(self, log_level='info'):
+    def get_center(self, p_flag, log_level='info'):
         XC = 0
         YC = 0
-        dir_path = '/home/espinosa/CALIFA_DATA/eCALIFA/'
-        file_name = 'get_proc_elines_CALIFA.clean.csv'    
+        if not p_flag:
+            dir_path = '/home/espinosa/CALIFA_DATA/eCALIFA/'
+            file_name = 'get_proc_elines_CALIFA.clean.csv'
+        else:
+            dir_path = '/home/espinosa/CALIFA_DATA/pCALIFA/'
+            file_name = 'get_proc_elines_PILOT.csv'            
         logger = logging.getLogger('get center')
         logger.propagate = False
         ch = logging.StreamHandler()
