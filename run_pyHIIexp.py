@@ -36,11 +36,19 @@ def extract_HIIregions(obj_name):
     extract_SSP_table(seg_map, ssp_file, fe_file, output_path, log_level)
 
 def extract_HIIregions_p(obj_name):
-    max_dist=5.5
-    frac_peak=0.05
-    F_max=0.3
-    dist=0
-    min_flux=0.05
+    if obj_name in ['ngc1058', ' ngc1637', 'ngc3184', 'ngc4625', 'ngc628',
+                       'ngc7771']:
+            max_dist=5.5
+            frac_peak=0.05
+            F_max=0.3*15
+            dist=0
+            min_flux=0.05*15
+    else:
+        max_dist=5.5
+        frac_peak=0.05
+        F_max=0.3
+        dist=0
+        min_flux=0.05
     p_flag = True
     output_path='/home/espinosa/CALIFA_DATA/pCALIFA/catalog/'
     fe_file = p_fe_dir + 'flux_elines.{}.cube.fits.gz'.format(obj_name)
