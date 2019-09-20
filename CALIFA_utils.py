@@ -73,7 +73,6 @@ def read_fits_file(fits_file, header=True, log_leve='info'):
         else:
             return None
 
-
 def read_flux_elines_cubes(fe_file, header=True, log_level='info'):
     logger = logging.getLogger('read fe file')
     logger.propagate = False
@@ -179,6 +178,40 @@ def read_seg_map(seg_map, header=False, log_level='info'):
     else:
         return data
 
+def read_mask_map(mask_map, header=False, log_level='info'):
+    logger = logging.getLogger('read mask map')
+    logger.propagate = False
+    ch = logging.StreamHandler()
+    if log_level == 'info':
+        logger.setLevel(level=logging.INFO)
+        ch.setLevel(logging.INFO)
+    if log_level == 'debug':
+        logger.setLevel(level=logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+    ch.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
+    logger.addHandler(ch)
+    file_path = mask_map
+    if os.path.isfile(file_path):
+        if header:
+            data, header = fits.getdata(file_path, header=header)
+        else:
+            data = fits.getdata(file_path, header=header)
+    else:
+        logger.warn('No exist masked map file')
+        if header:
+            return None, [0]
+        else:
+            [0]
+    logger.info('Read masked map file done')
+    if header:
+        return header, data
+    else:
+        return data
+
+    
 def read_SSP_fits(ssp_file, header=True, log_level='info'):
     logger = logging.getLogger('read ssp file')
     logger.propagate = False
