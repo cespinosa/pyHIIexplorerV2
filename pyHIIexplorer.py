@@ -199,8 +199,8 @@ class pyHIIexplorer:
         hdu_seg_map.header.set('OBJECT', value=self.obj_name)
         hdul_mask_map = fits.HDUList([hdu_mask_map])
         hdul_seg_map = fits.HDUList([hdu_seg_map])
-        mask_name = "mask_Ha_EW.{}.fits.gz".format(self.obj_name)
-        seg_name = "seg_Ha_EW.{}.fits.gz".format(self.obj_name)
+        mask_name = "mask_Ha.{}.fits.gz".format(self.obj_name)
+        seg_name = "seg_Ha.{}.fits.gz".format(self.obj_name)
         mask_path = output_path + mask_name
         seg_path = output_path + seg_name
         hdul_mask_map.writeto(mask_path, overwrite=True)
