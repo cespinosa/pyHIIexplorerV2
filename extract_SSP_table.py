@@ -31,6 +31,9 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
                                               header=True, log_level=log_level)
     hdr, seg_map = read_seg_map(seg_map, header=True, log_level='info')
     ns = int(np.max(seg_map))
+    name_elines = np.loadtxt('emission_lines.LIST', comments='#',
+                             usecols=[1], dtype=np.str)
+    nz_Ha = np.where(name_elines == 'Ha')[0].item()
     name_ssp = head['OBJECT']
     if ns > 0:
         name_seg = hdr['OBJECT']
@@ -57,7 +60,7 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
         seg = np.copy(seg_map)
         x = np.array([])
         y = np.array([])
-        weights = data[0, :, :]
+        weights = dt_fe[ :, :]
         weights = weights**2
 
         for i, region in enumerate(nr):
