@@ -112,10 +112,12 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level):
             fp.write("# VERSION: 1.0\n")
             fp.write("# COLAPRV: S.F.Sanchez\n")
             fp.write("# PUBAPRV: None\n")           
-            fp.write('#  COLUMN1:  HIIREGID\n')
+            fp.write('#  COLUMN1:  HIIREGID           , string, ,  HII region ID\n')
             for i, label in enumerate(header_csv):
-                fp.write('#  COLUMN{}:  {}\n'.format(i+2, label))
-            df.to_csv(fp, index_label='HIIREGID')
+                fp.write('#  COLUMN{}:  {}, float, {} \n'.format(i+2,
+                                                                 label_col[i],
+                                                                 label))
+            df.to_csv(fp, index_label='HIIREGID', header=False)
     else:
         obj_name = name_sfh
         logger.info("No regions detected for {}".format(obj_name))
