@@ -29,7 +29,7 @@ def extract_HIIregions(obj_name):
                       min_flux, log_level=log_level, n_index=45)
     a.HIIrecover()
 
-    seg_map = output_path + "seg_Ha_EW.{}.fits.gz".format(obj_name)
+    seg_map = output_path + "seg_Ha.{}.fits.gz".format(obj_name)
 
     extract_flux_elines_table(seg_map, fe_file, output_path, log_level)
     extract_SFH_table(seg_map, sfh_file, output_path, log_level)
@@ -59,7 +59,7 @@ def extract_HIIregions_p(obj_name):
                       min_flux, p_flag, log_level=log_level, n_index=45)
     a.HIIrecover()
 
-    seg_map = output_path + "seg_Ha_EW.{}.fits.gz".format(obj_name)
+    seg_map = output_path + "seg_Ha.{}.fits.gz".format(obj_name)
 
     extract_flux_elines_table(seg_map, fe_file, output_path, log_level)
     extract_SFH_table(seg_map, sfh_file, output_path, log_level)
