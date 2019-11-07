@@ -12,16 +12,21 @@ from CALIFA_utils import read_fits_file
 from CALIFA_utils import get_slice_from_flux_elines, get_center
 
 class pyHIIexplorer:
-    def __init__(self, Ha_map, output_path, max_dist=5.5, frac_peak=0.05, F_max=0.3, dist=0,
-                 min_flux=0.05, p_flag=False, XC=None, YC=None,
-                 log_level='info', PSF=2.3, n_index=None):
+    def __init__(self, Ha_map, output_path, max_dist=5.5, frac_peak=0.05,
+                 F_max=0.3, dist=0, min_flux=0.05, p_flag=False,
+                 XC=None, YC=None,
+                 log_level='info', PSF=2.3, n_index=None,
+                 obj_name_from_header=False):
         if n_index is None:
             self.header, self.Ha_map = read_flux_elines_cubes(Ha_map,
                                                               header=True)
         else:
             self.header, self.Ha_map = get_slice_from_flux_elines(Ha_map,
                                                                   header=True)
-        self.obj_name = self.get_name(Ha_map, log_level)
+        if obj_name_from_header:
+            self.obj_name = self.get_name(Ha_map, log_level)
+        else:
+            self.obj_name = Ha_map.split('/')[-1][12:-13]
         self.max_area = np.pi * max_dist**2
         self.F_max = F_max
         self.frac_peak = frac_peak

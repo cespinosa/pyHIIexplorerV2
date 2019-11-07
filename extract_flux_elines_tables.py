@@ -11,7 +11,8 @@ import scipy.constants as scts
 from datetime import date
 from CALIFA_utils import read_flux_elines_cubes, read_seg_map
 
-def extract_flux_elines_table(seg_map, fe_file, output, log_level):
+def extract_flux_elines_table(seg_map, fe_file, output, log_level,
+                              obj_name_from_header=False):
     logger = logging.getLogger('extract_flux_elines_table')
     logger.propagate = False
     ch = logging.StreamHandler()
@@ -30,7 +31,10 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
     header, data = read_flux_elines_cubes(fe_file,
                                           header=True, log_level=log_level)
     (nz_dt, ny_dt, nx_dt) = data.shape
-    name_fe = header['OBJECT']
+    if obj_name_from_header:
+        name_fe = header['OBJECT']
+    else:
+        name_fe = fe_file.split('/')[-1][12:-13] 
     hdr, data_seg_map = read_seg_map(seg_map, header=True, log_level='info')
     ns = int(np.max(data_seg_map))
     logger.debug('Clumpy regions found: {}'.format(ns))
