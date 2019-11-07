@@ -25,12 +25,13 @@ def extract_HIIregions(obj_name):
     sfh_file = sfh_dir + '{}.SFH.cube.fits.gz'.format(obj_name)
     ssp_file = ssp_dir + '{}.SSP.cube.fits.gz'.format(obj_name)
 
+    
     a = pyHIIexplorer(fe_file, output_path, max_dist, frac_peak, F_max, dist,
                       min_flux, log_level=log_level, n_index=45)
     a.HIIrecover()
-
+    
     seg_map = output_path + "seg_Ha.{}.fits.gz".format(obj_name)
-
+    print(seg_map)
     extract_flux_elines_table(seg_map, fe_file, output_path, log_level)
     extract_SFH_table(seg_map, sfh_file, output_path, log_level)
     extract_SSP_table(seg_map, ssp_file, fe_file, output_path, log_level)
