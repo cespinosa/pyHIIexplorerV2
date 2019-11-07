@@ -33,6 +33,7 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level):
     name_fe = header['OBJECT']
     hdr, data_seg_map = read_seg_map(seg_map, header=True, log_level='info')
     ns = int(np.max(data_seg_map))
+    logger.debug('Clumpy regions found: {}'.format(ns))
     if ns > 0:
         name_seg = hdr['OBJECT']
         if name_fe != name_seg:
