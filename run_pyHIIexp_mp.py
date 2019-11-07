@@ -26,7 +26,7 @@ def get_names_eCALIFA():
     obj_names = [path_file.split('.', 1)[1][:-13]
              for path_file in path_files ]
     return obj_names
-
+n
 def get_names_get_proc_files_eCALIFA(path=None, clean_catalog=True):
     if path is None:
         path = eCALIFA_path
