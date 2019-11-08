@@ -10,7 +10,8 @@ import csv
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SSP_fits, get_slice_from_flux_elines
 
-def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
+def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level,
+                      obj_name_from_header=False):
     logger = logging.getLogger('extract_SSP_table')
     logger.propagate = False
     ch = logging.StreamHandler()
