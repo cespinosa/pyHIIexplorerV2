@@ -50,7 +50,8 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level,
         crval2 = header['CRVAL2']
         cdelta2 = header['CDELT2']
         crpix2 = header['CRPIX2']
-        name = header['OBJECT']
+        # name = header['OBJECT']
+        name = name_fe
         califaID = header['CALIFAID']
         # label_list = ('HIERARCH V500 PPAK P1 GRAT_ID',
         #              'HIERARCH V500 PPAK P3F1 GRAT_ID',
