@@ -10,6 +10,7 @@ import logging
 from astropy.io import fits
 from CALIFA_utils import read_fits_file
 from CALIFA_utils import get_slice_from_flux_elines, get_center
+from CALIFA_utils import read_flux_elines_cubes
 
 class pyHIIexplorer:
     def __init__(self, Ha_map, output_path, max_dist=5.5, frac_peak=0.05,
