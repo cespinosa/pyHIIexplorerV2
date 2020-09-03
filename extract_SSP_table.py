@@ -10,7 +10,8 @@ import csv
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SSP_fits, get_slice_from_flux_elines
 
-def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
+def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level,
+                      obj_name_from_header=False):
     logger = logging.getLogger('extract_SSP_table')
     logger.propagate = False
     ch = logging.StreamHandler()
@@ -34,7 +35,10 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
     name_elines = np.loadtxt('emission_lines.LIST', comments='#',
                              usecols=[1], dtype=np.str)
     nz_Ha = np.where(name_elines == 'Ha')[0].item()
-    name_ssp = head['OBJECT']
+    if obj_name_from_header:
+        name_ssp = head['OBJECT']
+    else:
+        name_ssp = fe_file.split('/')[-1][12:-13]
     if ns > 0:
         name_seg = hdr['OBJECT']
         if name_ssp != name_seg:
@@ -49,7 +53,7 @@ def extract_SSP_table(seg_map, ssp_file, fe_file,  output, log_level):
         crval2 = hd_fe['CRVAL2']
         cdelt2 = hd_fe['CDELT2']
         crpix2 = hd_fe['CRPIX2']
-        NAME = hd_fe['OBJECT']
+        NAME = name_ssp
         CALIFAID = hd_fe['CALIFAID']
         nr = np.unique(seg_map)[1:]
         nz = data.shape[0]

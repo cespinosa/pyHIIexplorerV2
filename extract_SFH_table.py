@@ -10,7 +10,8 @@ import pandas as pd
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SFH_fits
 
-def extract_SFH_table(seg_map, sfh_file, output, log_level):
+def extract_SFH_table(seg_map, sfh_file, output, log_level,
+                      obj_name_from_header=False):
     logger = logging.getLogger('extract_SFH_table')
     logger.propagate = False
     ch = logging.StreamHandler()
@@ -30,7 +31,10 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level):
     if head is None or data is None:
         logger.warn('Error with SFH file {}'.format(sfh_file))
         return None
-    name_sfh = head['OBJECT']
+    if obj_name_from_header:
+        name_sfh = head['OBJECT']
+    else:
+        name_sfh = sfh_file.split('/')[-1][:-17]
     ns = int(np.max(seg_map))
     if ns > 0:
         name_seg = hdr['OBJECT']
