@@ -30,15 +30,19 @@ If you do not get any error or warning message you have suscessfully installed p
 In the example files: [run_pyHIIexp.py](run_pyHIIexp.py) and [run_pyHIIexp_mp.py](run_pyHIIexp_mp.py) coudl find a implementation of full code. However, each script could be run it as standalone script.
 #### pyHIIexplorer.py
 Script that perform the segretation of the clumpy regions from emission map
+
 USAGE: pyHIIexplorer.py emission_map max_dist frac_peak f_max dist min_flux output_path -XC -YC --index --verbose --PSF
 #### extract flux elines tables.py
 Script that perform the extraction of flux emission lines based on segmentation map.
+
 USAGE: extract_flux_elines_tables.py seg_map fe_file output_path --verbose
 #### extract_SFH_table.py
 Script that perform the extraction of SSP weights based on segmentation map.
+
 USAGE: extract_SFH_table.py seg_map sfh_file output_path --verbose
 #### extract_SFH_table.py
 Script that perform the extraction of SSP properties based on segmentation map.
+
 USAGE: extract_SFH_table.py seg_map SSP_file output_path --verbose
 
 \* extract_X_table scripts are optimized to CALIFA data. 
