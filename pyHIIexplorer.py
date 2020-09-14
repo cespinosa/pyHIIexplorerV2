@@ -5,7 +5,6 @@
 import argparse
 import os
 import csv
-import warnings
 import numpy as np
 from astropy.io import fits
 from CALIFA_utils import read_fits_file
@@ -81,8 +80,6 @@ class pyHIIexplorer:
                 print('Setting XC=YC=0')
         except FileNotFoundError:
             print('get_proc_elines_CALIFA.csv not found')
-        #except:
-        #    logger.warn('Something wrong  with get center function')
         return XC, YC
 
        
