@@ -1,5 +1,4 @@
 import os
-import logging
 import csv
 from astropy.io import fits
 
