@@ -5,16 +5,16 @@ from multiprocessing import Pool
 from run_pyHIIexp import extract_HIIregions
 from run_pyHIIexp import extract_HIIregions_p
 
-eCALIFA_path = '/home/espinosa/CALIFA_DATA/eCALIFA/'
-pCALIFA_path = '/home/espinosa/CALIFA_DATA/pCALIFA/'
+eCALIFA_path = '/home/espinosa/data/CALIFA_DATA/eCALIFA/'
+pCALIFA_path = '/home/espinosa/data/CALIFA_DATA/pCALIFA/'
 
-def make_catalog_eCALIFA(obj_names, N_CORE=4):
+def make_catalog_eCALIFA(obj_names, N_CORE=8):
     pool = Pool(N_CORE)
     pool.map(extract_HIIregions, obj_names, chunksize=1)
     pool.close()
     pool.join()
 
-def make_catalog_pCALIFA(obj_names, N_CORE=4):
+def make_catalog_pCALIFA(obj_names, N_CORE=8):
     pool = Pool(N_CORE)
     pool.map(extract_HIIregions_p, obj_names, chunksize=1)
     pool.close()
