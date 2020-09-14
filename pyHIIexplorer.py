@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 # ./pyHIIexplorer.py '/home/espinosa/CALIFA_DATA/eCALIFA/fe_files/flux_elines.NGC5947.cube.fits.gz' --index 45 5.5 0.05 0.3 0 0.05 /home/espinosa/tmp/
+
 import argparse
 import os
 import csv
 import warnings
 import numpy as np
-import logging
 from astropy.io import fits
 from CALIFA_utils import read_fits_file
 from CALIFA_utils import get_slice_from_flux_elines, get_center
@@ -16,7 +16,7 @@ class pyHIIexplorer:
     def __init__(self, Ha_map, output_path, max_dist=5.5, frac_peak=0.05,
                  F_max=0.3, dist=0, min_flux=0.05, p_flag=False,
                  XC=None, YC=None,
-                 log_level='info', PSF=2.3, n_index=None,
+                 verbose=False, PSF=2.3, n_index=None,
                  obj_name_from_header=False):
         if n_index is None:
             self.header, self.Ha_map = read_flux_elines_cubes(Ha_map,
@@ -25,7 +25,7 @@ class pyHIIexplorer:
             self.header, self.Ha_map = get_slice_from_flux_elines(Ha_map,
                                                                   header=True)
         if obj_name_from_header:
-            self.obj_name = self.get_name(Ha_map, log_level)
+            self.obj_name = self.get_name(Ha_map, verbose)
         else:
             self.obj_name = Ha_map.split('/')[-1][12:-13]
         self.max_area = np.pi * max_dist**2
@@ -34,47 +34,20 @@ class pyHIIexplorer:
         self.dist = dist
         self.min_flux = min_flux
         self.max_dist = max_dist
+        self.verbose = verbose
         if XC is None or YC is None:
-            self.XC, self.YC = self.get_center(p_flag, log_level=log_level)
+            self.XC, self.YC = self.get_center(p_flag, verbose=verbose)
         self.PSF = PSF
         self.output_path = output_path
         self.nx, self.ny = self.get_size()
-        self.logger = logging.getLogger('pyHIIexplorer')
-        self.logger.propagate = False
-        ch = logging.StreamHandler()
-        if log_level == 'info':
-            self.logger.setLevel(level=logging.INFO)
-            ch.setLevel(logging.INFO)
-        if log_level == 'debug':
-            self.logger.setLevel(level=logging.DEBUG)
-            ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-        ch.setFormatter(formatter)
-        if (self.logger.hasHandlers()):
-            self.logger.handlers.clear()
-        self.logger.addHandler(ch)
 
-    def get_name(self, file_path, log_level='info'):
-        logger = logging.getLogger('get object name')
-        logger.propagate = False
-        ch = logging.StreamHandler()
-        if log_level == 'info':
-            logger.setLevel(level=logging.INFO)
-            ch.setLevel(logging.INFO)
-        if log_level == 'debug':
-            logger.setLevel(level=logging.DEBUG)
-            ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-        ch.setFormatter(formatter)
-        if (logger.hasHandlers()):
-            logger.handlers.clear()
-        logger.addHandler(ch)
-        logger.info("Reading {}".format(file_path))
+    def get_name(self, file_path, verbose=False):
+        print("Reading {}".format(file_path))
         try:
             obj_name = self.header['OBJECT']
         except KeyError:
-            logger.warn("No OBJECT key in header. Getting obj name from" +
-                           " name file")
+            print("No OBJECT key in header. Getting obj name from" +
+                  " name file")
             obj_name = file_path.split('.', 1)[1][:-13]
         return obj_name
 
@@ -83,7 +56,7 @@ class pyHIIexplorer:
         ny = self.header['NAXIS2']
         return nx, ny
     
-    def get_center(self, p_flag, log_level='info'):
+    def get_center(self, p_flag, verbose=False):
         XC = 0
         YC = 0
         if not p_flag:
@@ -91,22 +64,9 @@ class pyHIIexplorer:
             file_name = 'get_proc_elines_CALIFA.clean.csv'
         else:
             dir_path = '/home/espinosa/CALIFA_DATA/pCALIFA/'
-            file_name = 'get_proc_elines_PILOT.csv'            
-        logger = logging.getLogger('get center')
-        logger.propagate = False
-        ch = logging.StreamHandler()
-        if log_level == 'info':
-            logger.setLevel(level=logging.INFO)
-            ch.setLevel(logging.INFO)
-        if log_level == 'debug':
-            logger.setLevel(level=logging.DEBUG)
-            ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-        ch.setFormatter(formatter)
-        if (logger.hasHandlers()):
-            logger.handlers.clear()
-        logger.addHandler(ch)
-        logger.debug("File path {}".format(dir_path + file_name))
+            file_name = 'get_proc_elines_PILOT.csv'
+        if verbose:
+            print("File path {}".format(dir_path + file_name))
         try:
             with open(dir_path + file_name, 'r') as fileCAL:
                 reader = csv.reader(fileCAL)
@@ -116,11 +76,11 @@ class pyHIIexplorer:
                         YC = float(row[168])
                         break
             if XC == 0:
-                logger.warn('{} is not in '.format(str(self.obj_name)) + 
+                print('{} is not in '.format(str(self.obj_name)) +
                                'get_proc_elines_CALIFA.csv file')
-                logger.warn('Setting XC=YC=0')
+                print('Setting XC=YC=0')
         except FileNotFoundError:
-            logger.error('get_proc_elines_CALIFA.csv not found')
+            print('get_proc_elines_CALIFA.csv not found')
         #except:
         #    logger.warn('Something wrong  with get center function')
         return XC, YC
@@ -138,6 +98,7 @@ class pyHIIexplorer:
         max_dist = self.max_dist
         min_flux = self.min_flux
         output_path = self.output_path
+        verbose = self.verbose
         Ha_map[np.isnan(Ha_map)] = 0
         seg_map = np.zeros_like(Ha_map)
         mask_map = np.ones_like(Ha_map)
@@ -148,10 +109,10 @@ class pyHIIexplorer:
         flux_PEAKS = np.array([])
         stop_flag = True
         n_good = self.check_good_px(Ha_map, F_l=0, F_m=1e30, nx=nx, ny=ny)
-        self.logger.info('Good Pixels (F > {} and F < {}) = {}'.format(0,
-                                                                  1e30,
-                                                                  n_good))
-        self.logger.info('[{} x {}](ny x nx))'.format(ny, nx))
+        print('Good Pixels (F > {} and F < {}) = {}'.format(0,
+                                                            1e30,
+                                                            n_good))
+        print('[{} x {}](ny x nx))'.format(ny, nx))
         while stop_flag:
             ip = -1
             jp = -1
@@ -177,12 +138,14 @@ class pyHIIexplorer:
             j_PEAKS = np.append(j_PEAKS, jp)
             flux_PEAKS = np.append(flux_PEAKS, Ha_map[jp, ip])
             n_reg += 1
-            self.logger.debug('ip = {} jp = {} nReg = {}'.format(ip, jp, n_reg))
+            if verbose:
+                print('ip = {} jp = {} nReg = {}'.format(ip, jp, n_reg))
             if ip == -1 and jp == -1:
                 stop_flag = False
             else:
-                self.logger.debug('Adding spaxel to peak ({},{})'.format(ip,
-                                                                         jp))
+                if verbose:
+                    print('Adding spaxel to peak ({},{})'.format(ip,
+                                                                 jp))
                 stop_flag = self.add_points(data_map=Ha_map, ip=ip, jp=jp,
                                             i_PEAKS=i_PEAKS, j_PEAKS=j_PEAKS,
                                             flux_PEAKS=flux_PEAKS,
@@ -193,7 +156,8 @@ class pyHIIexplorer:
                                             frac_peak=frac_peak)
                 map_data_now *= mask_map
             if not stop_flag:
-                self.logger.debug('Adding spaxels done')
+                if verbose:
+                    print('Adding spaxels done')
         mask_map = np.ones_like(seg_map)
         mask = seg_map > 0
         mask = ~mask
@@ -211,8 +175,9 @@ class pyHIIexplorer:
         seg_path = output_path + seg_name
         hdul_mask_map.writeto(mask_path, overwrite=True)
         hdul_seg_map.writeto(seg_path, overwrite=True)
-        self.logger.debug('Saving fit files in {}'.format(output_path))
-        self.logger.info('HIIexplorer finish for {}'.format(self.obj_name))
+        if verbose:
+            verbose('Saving fit files in {}'.format(output_path))
+        print('HIIexplorer finish for {}'.format(self.obj_name))
 
     def check_good_px(self, map_data, F_l, F_m, nx, ny):
         n_good = 0
@@ -417,8 +382,8 @@ if __name__ == "__main__":
                         default=None)
     parser.add_argument('-YC', help='y coordinate of galactic center',
                         default=None)
-    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
-                        " or 'debug'", default='info', metavar='level')
+    parser.add_argument('--verbose', help="Level of verbose: 'True'"+
+                        " or 'False'", default=True, metavar='verbose')
     parser.add_argument('--PSF', help='Point Spread Function value',
                         type=float, default=2.7, metavar='PSF_value')
     args = parser.parse_args()
@@ -432,7 +397,7 @@ if __name__ == "__main__":
     output_path = args.OUTPUT_PATH
     XC = args.XC
     YC = args.YC
-    log_level = args.log_level
+    verbose = args.verbose
     PSF = args.PSF
     pyHIIexplorer(Ha_map_path, output_path, max_dist, frac_peak, F_max, dist,
-                  min_flux, XC, YC, log_level, PSF, n_index).HIIrecover()
+                  min_flux, XC, YC, verbose, PSF, n_index).HIIrecover()
