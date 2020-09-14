@@ -2,8 +2,6 @@
 
 #./extract_flux_elines_tables.py /home/espinosa/tmp/seg_Ha_EW.NGC5947.fits.gz /home/espinosa/CALIFA_DATA/eCALIFA/fe_files/flux_elines.NGC5947.cube.fits.gz /home/espinosa/tmp/
 
-
-import logging
 import argparse
 import csv
 import numpy as np
@@ -11,39 +9,26 @@ import scipy.constants as scts
 from datetime import date
 from CALIFA_utils import read_flux_elines_cubes, read_seg_map
 
-def extract_flux_elines_table(seg_map, fe_file, output, log_level,
+def extract_flux_elines_table(seg_map, fe_file, output, verbose,
                               obj_name_from_header=False):
-    logger = logging.getLogger('extract_flux_elines_table')
-    logger.propagate = False
-    ch = logging.StreamHandler()
-    if log_level == 'info':
-        logger.setLevel(level=logging.INFO)
-        ch.setLevel(logging.INFO)
-    if log_level == 'debug':
-        logger.setLevel(level=logging.DEBUG)
-        ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-    ch.setFormatter(formatter)
-    if (logger.hasHandlers()):
-        logger.handlers.clear()
-    logger.addHandler(ch)    
     spol = scts.speed_of_light/1000
     header, data = read_flux_elines_cubes(fe_file,
-                                          header=True, log_level=log_level)
+                                          header=True, verbose=verbose)
     (nz_dt, ny_dt, nx_dt) = data.shape
     if obj_name_from_header:
         name_fe = header['OBJECT']
     else:
         name_fe = fe_file.split('/')[-1][12:-13] 
-    hdr, data_seg_map = read_seg_map(seg_map, header=True, log_level='info')
+    hdr, data_seg_map = read_seg_map(seg_map, header=True, verbose=verbose)
     ns = int(np.max(data_seg_map))
-    logger.debug('Clumpy regions found: {}'.format(ns))
+    if verbose:
+        print('Clumpy regions found: {}'.format(ns))
     if ns > 0:
         name_seg = hdr['OBJECT']
         if name_fe != name_seg:
-            logger.warn('OBJECT in header files does not match')
+            print('OBJECT in header files does not match')
         obj_name = name_fe
-        logger.info('Starting extract fe table for galaxy {}'.format(obj_name))
+        print('Starting extract fe table for galaxy {}'.format(obj_name))
         crval1 = header['CRVAL1']
         cdelta1 = header['CDELT1']
         crpix1 = header['CRPIX1']
@@ -80,21 +65,23 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level,
                                  usecols=[1], dtype=np.str)
         nz_Ha = np.where(name_elines == 'Ha')[0].item()
         NZ = wavelengths.size
-        logger.debug('Index of Halpha = {}'.format(nz_Ha))
+        if verbose:
+            print('Index of Halpha = {}'.format(nz_Ha))
         NZ_CUBE = nz_dt/8
         if NZ_CUBE != NZ:
-            looger.warn("Wrong emission line table! ({} != {})".format(NZ, NZ_CUBE))
+            print("Wrong emission line table! ({} != {})".format(NZ, NZ_CUBE))
             return None
         (ny_seg, nx_seg) = data_seg_map.shape
         if nx_dt > nx_seg or ny_dt > ny_seg:
-            logger.warn("Dimension doesn't match ({}x{})!=({}x{})".format(nx_dt,
-                                                                          ny_dt,
-                                                                          nx_seg,
-                                                                          ny_seg))
+            print("Dimension doesn't match ({}x{})!=({}x{})".format(nx_dt,
+                                                                    ny_dt,
+                                                                    nx_seg,
+                                                                    ny_seg))
             return None
 
         regions_id = np.unique(data_seg_map)
-        logger.debug("{} sources detected in {}".format(ns, obj_name))
+        if verbose:
+            print("{} sources detected in {}".format(ns, obj_name))
         a_out = np.zeros((nz_dt, ns))
         a_out_med = np.zeros((nz_dt, ns))
         a_out_sq = np.zeros((nz_dt, ns))
@@ -103,8 +90,10 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level,
         y = np.array([])
         weights = data[nz_Ha, :, :]
         weights = weights**2
+        n_pts = np.array([])
         for i, region in enumerate(regions_id[1:]):
             npt = (seg == region).sum()
+            n_pts = np.append(n_pts, npt)
             data_region_mask = seg == region
             ave = np.average(np.where(data_region_mask)[1],
                              weights=weights[data_region_mask])
@@ -125,12 +114,18 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level,
                 mean_array_sq = np.append(mean_array_sq, ave)
             a_out[:, i] = mean_array * npt
             a_out_med[:, i] = mean_array
-            a_out_sq[:, i] = mean_array_sq/npt*(1+1.6*np.log(npt))
-        logger.debug('Output path: ' + output)
+            # a_out_sq[:, i] = mean_array_sq/npt*(1+1.6*np.log(npt))
+            a_out_sq[:, i] = mean_array_sq
+        if verbose:
+            print('Output path: ' + output)
         output_name = "HII.{}.flux_elines.csv".format(obj_name)
+        # print(n_pts)
+        # print(n_pts.shape)
+        # return None
         with open(output + output_name, "wt") as fp:
-            logger.debug("Writing csv file in:{}".format(output
-                                                         + output_name))
+            if verbose:
+                print("Writing csv file in:{}".format(output
+                                                      + output_name))
             today = date.today()
             day = today.day
             month = today.month
@@ -195,6 +190,7 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level,
                              + "{}\n".format(wl))
                     NC += 1
             for i in np.arange(0, ns):
+                # print(i)
                 Row_lines = []
                 K = i + 1
                 DEC = crval2+cdelta2*(y[i]-(crpix2-1))/3600
@@ -248,14 +244,16 @@ def extract_flux_elines_table(seg_map, fe_file, output, log_level,
                         if "EW" in header_now:
                             val = val_med
                         if "e_" in header_now:
-                            val = np.sqrt(np.abs(val_sq))
+                            # val = np.sqrt(np.abs(val_sq))
+                            val = np.sqrt(np.abs(val_sq)) * (1 + 1.6*np.log(n_pts[i]))
                         Row_lines.append(val)
                 writer.writerow(Row_lines)
-            logger.debug(output_name + " created")
+            if verbose:
+                print(output_name + " created")
     else:
         obj_name = name_fe
-        logger.info("No regions detected for {}".format(obj_name))
-    logger.info("extract flux elines table finish for {}".format(obj_name))
+        print("No regions detected for {}".format(obj_name))
+    print("extract flux elines table finish for {}".format(obj_name))
 
 if __name__ == "__main__":
     description = "Extract the mean flux emission lines values for every ionized regions from segmentation map and fe file of CALIFA survey"
@@ -263,11 +261,11 @@ if __name__ == "__main__":
     parser.add_argument('SEG_MAP', help='Segmentation path file')
     parser.add_argument('FE_FILE', help='flux elines path file')
     parser.add_argument('OUTPUT', help='outpat path directory')
-    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
-                        " or 'debug'", default='info', metavar='level')
+    parser.add_argument('--verbose', help="Verbose: 'True'"+
+                        " or 'False'", default=False, metavar='verbose')
     args = parser.parse_args()
     seg_map = args.SEG_MAP
     fe_file = args.FE_FILE
     output = args.OUTPUT
-    log_level = args.log_level
-    extract_flux_elines_table(seg_map, fe_file, output, log_level)
+    verbose = args.verbose
+    extract_flux_elines_table(seg_map, fe_file, output, verbose)

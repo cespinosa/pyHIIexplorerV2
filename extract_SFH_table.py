@@ -2,34 +2,18 @@
 
 #./extract_SFH_table.py /home/espinosa/tmp/seg_Ha_EW.NGC5947.fits.gz /home/espinosa/CALIFA_DATA/eCALIFA/sfh_files/NGC5947.SFH.cube.fits.gz /home/espinosa/tmp/
 
-
-import logging
 import argparse
 import numpy as np
 import pandas as pd
 from datetime import date
 from CALIFA_utils import read_seg_map, read_SFH_fits
 
-def extract_SFH_table(seg_map, sfh_file, output, log_level,
+def extract_SFH_table(seg_map, sfh_file, output, verbose=False,
                       obj_name_from_header=False):
-    logger = logging.getLogger('extract_SFH_table')
-    logger.propagate = False
-    ch = logging.StreamHandler()
-    if log_level == 'info':
-        logger.setLevel(level=logging.INFO)
-        ch.setLevel(logging.INFO)
-    if log_level == 'debug':
-        logger.setLevel(level=logging.DEBUG)
-        ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-    ch.setFormatter(formatter)
-    if (logger.hasHandlers()):
-        logger.handlers.clear()
-    logger.addHandler(ch)
-    head, data = read_SFH_fits(sfh_file, header=True, log_level=log_level)
-    hdr, seg_map = read_seg_map(seg_map, header=True, log_level=log_level)
+    head, data = read_SFH_fits(sfh_file, header=True, verbose=verbose)
+    hdr, seg_map = read_seg_map(seg_map, header=True, verbose=verbose)
     if head is None or data is None:
-        logger.warn('Error with SFH file {}'.format(sfh_file))
+        print('Error with SFH file {}'.format(sfh_file))
         return None
     if obj_name_from_header:
         name_sfh = head['OBJECT']
@@ -39,9 +23,9 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level,
     if ns > 0:
         name_seg = hdr['OBJECT']
         if name_sfh != name_seg:
-            logger.warn('OBJECT in header files does not match')
+            print('OBJECT in header files does not match')
         obj_name = name_sfh
-        logger.info('Starting extract SFH table for galaxy {}'.format(obj_name))
+        print('Starting extract SFH table for galaxy {}'.format(obj_name))
         nr = np.unique(seg_map)[1:]
         nz = data.shape[0]
         seg = np.copy(seg_map)
@@ -100,11 +84,13 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level,
         df = pd.DataFrame(means_cube.T)
         df.index = label_rows
         df.columns = label_col
-        logger.debug('Output path: ' + output)
+        if verbose:
+            print('Output path: ' + output)
         output_name = "HII.{}.SFH.csv".format(obj_name)
         with open(output + output_name, "wt") as fp:
-            logger.debug("Writing csv file in:{}".format(output
-                                                         + output_name))
+            if verbose:
+                print("Writing csv file in:{}".format(output
+                                                      + output_name))
             today = date.today()
             day = today.day
             month = today.month
@@ -124,8 +110,8 @@ def extract_SFH_table(seg_map, sfh_file, output, log_level,
             df.to_csv(fp, index_label='HIIREGID', header=False)
     else:
         obj_name = name_sfh
-        logger.info("No regions detected for {}".format(obj_name))
-    logger.info('Extract SFH table finish for {}'.format(obj_name))
+        print("No regions detected for {}".format(obj_name))
+    print('Extract SFH table finish for {}'.format(obj_name))
 
 if __name__ == "__main__":
     description = "Extract the mean SFH values for every ionized regions from segmentation map and fe file of CALIFA survey"
@@ -133,11 +119,11 @@ if __name__ == "__main__":
     parser.add_argument('SEG_MAP', help='Segmentation path file')
     parser.add_argument('SFH_FILE', help='SFH path file')
     parser.add_argument('OUTPUT', help='outpat path directory')
-    parser.add_argument('--log_level', help="Level of verbose: 'info'"+
-                        " or 'debug'", default='info', metavar='level')
+    parser.add_argument('--verbose', help="Level of verbose: 'True'"+
+                        " or 'False'", default=False, metavar='verbose')
     args = parser.parse_args()
     seg_map = args.SEG_MAP
     sfh_file = args.SFH_FILE
     output = args.OUTPUT
-    log_level = args.log_level
-    extract_SFH_table(seg_map, sfh_file, output, log_level)
+    verbose = args.verbose
+    extract_SFH_table(seg_map, sfh_file, output, verbose)
